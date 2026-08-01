@@ -1,0 +1,17 @@
+{
+  "logicalName": "fpip_purchaseorder",
+  "displayName": "Purchase Order",
+  "displayCollectionName": "Purchase Orders",
+  "description": "Purchase orders with autonumber PO number and approval status.",
+  "primaryNameAttribute": "fpip_ponumber",
+  "columns": [
+    { "name": "fpip_ponumber", "type": "autonumber", "displayName": "PO Number", "prefix": "PO-", "format": "PO-{SEQ:5}" },
+    { "name": "fpip_amount", "type": "money", "displayName": "Amount", "min": 0, "precision": 2 },
+    { "name": "fpip_status", "type": "choice", "displayName": "Status", "options": { "Pending Approval": 1, "Approved": 2, "Delivered": 3 }, "default": 1 }
+  ],
+  "lookups": [
+    { "name": "fpip_Requisition", "displayName": "Requisition", "targetTable": "fpip_requisition", "required": false },
+    { "name": "fpip_Supplier", "displayName": "Supplier", "targetTable": "fpip_supplier", "required": true }
+  ],
+  "notes": "po_number uses Dataverse autonumber format PO-{SEQ:5}."
+}

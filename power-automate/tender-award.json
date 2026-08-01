@@ -1,0 +1,62 @@
+{
+  "name": "FPIP_Tender_Award_Approval",
+  "description": "Requires all members of the Procurement Committee to approve before a tender can be awarded. Writes the decision back to fpip_tender and fpip_auditlogentry.",
+  "trigger": {
+    "type": "Dataverse",
+    "entity": "fpip_approvalrequests",
+    "filter": "fpip_record_type eq 'Tender Award' and fpip_status eq 1"
+  },
+  "steps": [
+    {
+      "name": "Get_Tender",
+      "type": "DataverseGetRecord",
+      "entity": "fpip_tenders",
+      "id": "[@triggerOutputs()?['body/_fpip_related_tender_value']]"
+    },
+    {
+      "name": "Get_Approval_Policy",
+      "type": "DataverseListRows",
+      "entity": "fpip_approvalpolicies",
+      "filter": "fpip_policy_type eq 2 and fpip_active eq true",
+      "top": 1
+    },
+    {
+      "name": "Start_Committee_Approval",
+      "type": "StartAndWaitForAnApproval",
+      "approvalType": "Approve/Reject - Everyone must approve",
+      "title": "Tender award approval",
+      "assignedTo": "[@outputs('Get_Approval_Policy')?['body/value'][0]['fpip_committee_team']]"
+    },
+    {
+      "name": "Update_Tender_Status",
+      "type": "DataverseUpdateRecord",
+      "entity": "fpip_tenders",
+      "id": "[@triggerOutputs()?['body/_fpip_related_tender_value']]",
+      "fields": {
+        "fpip_status": "@{if(equals(outputs('Start_Committee_Approval')?['outcome'], 'Approve'), 4, 1)}"
+      }
+    },
+    {
+      "name": "Update_Approval_Request",
+      "type": "DataverseUpdateRecord",
+      "entity": "fpip_approvalrequests",
+      "id": "[@triggerOutputs()?['body/fpip_approvalrequestid']}]",
+      "fields": {
+        "fpip_status": "@{if(equals(outputs('Start_Committee_Approval')?['outcome'], 'Approve'), 2, 3)}"
+      }
+    },
+    {
+      "name": "Write_Audit_Log",
+      "type": "DataverseAddRow",
+      "entity": "fpip_auditlogentries",
+      "fields": {
+        "fpip_timestamp": "@utcNow()",
+        "fpip_actor": "Procurement Committee",
+        "fpip_actor_type": 1,
+        "fpip_action": "@{concat('Tender award ', outputs('Start_Committee_Approval')?['outcome'], ' via Power Automate')}",
+        "fpip_entity_reference": "@{outputs('Get_Tender')?['body/fpip_title']}",
+        "fpip_source_detail": "Power Automate · Tender Award Approval"
+      }
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "logicalName": "fpip_auditlogentry",
+  "displayName": "Audit Log Entry",
+  "displayCollectionName": "Audit Log Entries",
+  "description": "Audit trail of human and AI-agent actions across FPIP.",
+  "primaryNameAttribute": "fpip_action",
+  "columns": [
+    { "name": "fpip_timestamp", "type": "datetime", "displayName": "Timestamp", "format": "DateAndTime", "required": true },
+    { "name": "fpip_actor", "type": "string", "displayName": "Actor", "maxLength": 150 },
+    { "name": "fpip_actor_type", "type": "choice", "displayName": "Actor Type", "options": { "Human": 1, "AI Agent": 2 }, "default": 1 },
+    { "name": "fpip_action", "type": "string", "displayName": "Action", "maxLength": 300 },
+    { "name": "fpip_entity_reference", "type": "string", "displayName": "Entity Reference", "maxLength": 300 },
+    { "name": "fpip_source_detail", "type": "string", "displayName": "Source Detail", "maxLength": 300 }
+  ],
+  "lookups": [],
+  "notes": "Populate from Dataverse built-in audit log via a scheduled export, OR write directly from every create/update. Phase 2: the agent service writes an entry on every tool call that reads sensitive data. Phase 3: Power Automate writes an entry (actor_type: Human) on every approval decision."
+}

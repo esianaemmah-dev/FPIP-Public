@@ -1,0 +1,84 @@
+{
+  "name": "FPIP_Contract_Renewal_Approval",
+  "description": "Scheduled flow that finds contracts expiring within 90 days with no renewal approval, creates an approval request, and routes to Legal & Procurement.",
+  "trigger": {
+    "type": "Recurrence",
+    "frequency": "Day",
+    "interval": 1,
+    "startTime": "06:00"
+  },
+  "steps": [
+    {
+      "name": "List_Expiring_Contracts",
+      "type": "DataverseListRows",
+      "entity": "fpip_contracts",
+      "filter": "fpip_expiry_date le @{addDays(utcNow(), 90, 'yyyy-MM-dd')} and fpip_renewal_approval_created ne true",
+      "top": 100
+    },
+    {
+      "name": "Get_Approval_Policy",
+      "type": "DataverseListRows",
+      "entity": "fpip_approvalpolicies",
+      "filter": "fpip_policy_type eq 4 and fpip_active eq true",
+      "top": 1
+    },
+    {
+      "name": "For_Each_Contract",
+      "type": "Apply_to_each",
+      "items": "@{outputs('List_Expiring_Contracts')?['body/value']}",
+      "actions": [
+        {
+          "name": "Create_Approval_Request",
+          "type": "DataverseAddRow",
+          "entity": "fpip_approvalrequests",
+          "fields": {
+            "fpip_record_type": "Contract Renewal",
+            "fpip_related_record": "@{items('For_Each_Contract')?['fpip_contractid']}",
+            "fpip_amount": "@{items('For_Each_Contract')?['fpip_value']}",
+            "fpip_status": 1,
+            "fpip_requested_by": "Power Automate",
+            "fpip_waiting_since": "@utcNow()"
+          }
+        },
+        {
+          "name": "Start_Legal_Approval",
+          "type": "StartAndWaitForAnApproval",
+          "approvalType": "Approve/Reject - First to respond",
+          "title": "Contract renewal approval",
+          "assignedTo": "[@outputs('Get_Approval_Policy')?['body/value'][0]['fpip_primary_approver']]"
+        },
+        {
+          "name": "Update_Contract_Renewal_Flag",
+          "type": "DataverseUpdateRecord",
+          "entity": "fpip_contracts",
+          "id": "@{items('For_Each_Contract')?['fpip_contractid']}",
+          "fields": {
+            "fpip_renewal_approval_created": true
+          }
+        },
+        {
+          "name": "Update_Approval_Request",
+          "type": "DataverseUpdateRecord",
+          "entity": "fpip_approvalrequests",
+          "id": "@{outputs('Create_Approval_Request')?['body/fpip_approvalrequestid']}",
+          "fields": {
+            "fpip_status": "@{if(equals(outputs('Start_Legal_Approval')?['outcome'], 'Approve'), 2, 3)}"
+          }
+        },
+        {
+          "name": "Write_Audit_Log",
+          "type": "DataverseAddRow",
+          "entity": "fpip_auditlogentries",
+          "fields": {
+            "fpip_timestamp": "@utcNow()",
+            "fpip_actor": "@{outputs('Start_Legal_Approval')?['responder']}",
+            "fpip_actor_type": 1,
+            "fpip_action": "@{concat('Contract renewal ', outputs('Start_Legal_Approval')?['outcome'], ' via Power Automate')}",
+            "fpip_entity_reference": "@{items('For_Each_Contract')?['fpip_title']}",
+            "fpip_source_detail": "Power Automate · Contract Renewal Approval"
+          }
+        }
+      ]
+    }
+  ]
+}

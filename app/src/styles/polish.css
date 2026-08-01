@@ -1,0 +1,405 @@
+/* Polish pass — Dashboard, Workflows, Document Vault
+   Quieter surfaces, clearer hierarchy, light motion. Keeps navy / brass / teal. */
+
+@keyframes polish-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes polish-bar {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.polish-page {
+  animation: polish-in 0.45s ease both;
+}
+
+.page-masthead {
+  position: relative;
+  margin: -4px 0 22px;
+  padding: 22px 24px 24px;
+  border-radius: 14px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 120% at 100% 0%, rgba(173, 123, 50, 0.14), transparent 55%),
+    linear-gradient(135deg, #1a2342 0%, #2a3866 48%, #1e4a47 100%);
+  color: #f4f6fb;
+  box-shadow: 0 12px 32px -18px rgba(11, 18, 32, 0.45);
+}
+
+.page-masthead::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  transform-origin: left;
+  background: linear-gradient(90deg, var(--brass), #d4a85c, transparent);
+  animation: polish-bar 0.7s 0.15s ease both;
+}
+
+.page-masthead .eyebrow {
+  color: rgba(244, 246, 251, 0.55);
+}
+
+.page-masthead h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(26px, 3vw, 34px);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  margin: 6px 0 8px;
+  color: #fff;
+}
+
+.page-masthead p {
+  margin: 0;
+  max-width: 42rem;
+  font-size: 14px;
+  line-height: 1.55;
+  color: rgba(244, 246, 251, 0.72);
+}
+
+.page-masthead-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.page-masthead-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.mast-stat {
+  min-width: 88px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(6px);
+  text-align: right;
+}
+
+.mast-stat b {
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #fff;
+  line-height: 1.1;
+}
+
+.mast-stat span {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(244, 246, 251, 0.5);
+}
+
+/* Signal strip — quieter, less “dashboard widget” */
+.polish-signals {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+@media (max-width: 900px) {
+  .polish-signals {
+    grid-template-columns: 1fr;
+  }
+}
+
+.polish-signal {
+  position: relative;
+  padding: 16px 18px 16px 20px;
+  border-radius: 12px;
+  background: var(--paper);
+  border: 1px solid var(--line);
+  box-shadow: none;
+  overflow: hidden;
+  animation: polish-in 0.5s ease both;
+}
+
+.polish-signal:nth-child(1) {
+  animation-delay: 0.05s;
+}
+.polish-signal:nth-child(2) {
+  animation-delay: 0.1s;
+}
+.polish-signal:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.polish-signal::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--indigo);
+}
+
+.polish-signal.warn::before {
+  background: var(--warn);
+}
+.polish-signal.danger::before {
+  background: var(--danger);
+}
+.polish-signal.ok::before {
+  background: var(--teal);
+}
+
+.polish-signal strong {
+  display: block;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+}
+
+.polish-signal span {
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  line-height: 1.45;
+}
+
+.polish-signal .signal-actions {
+  margin-top: 12px;
+}
+
+/* KPI — lift without heavy card chrome */
+.polish-kpis .kpi {
+  border: none;
+  box-shadow: none;
+  background: transparent;
+  padding: 4px 2px 8px;
+  border-bottom: 2px solid var(--line-soft);
+  border-radius: 0;
+  transition: border-color 0.2s ease;
+  animation: polish-in 0.5s ease both;
+}
+
+.polish-kpis .kpi:hover {
+  border-bottom-color: var(--brass);
+}
+
+.polish-kpis .kpi:nth-child(1) {
+  animation-delay: 0.08s;
+}
+.polish-kpis .kpi:nth-child(2) {
+  animation-delay: 0.12s;
+}
+.polish-kpis .kpi:nth-child(3) {
+  animation-delay: 0.16s;
+}
+.polish-kpis .kpi:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.polish-kpis .kpi-value {
+  font-size: 28px;
+  letter-spacing: -0.02em;
+}
+
+/* Pipeline as a connected flow */
+.polish-pipeline {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0;
+  position: relative;
+}
+
+@media (max-width: 900px) {
+  .polish-pipeline {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+}
+
+.polish-stage {
+  position: relative;
+  padding: 14px 16px;
+  text-align: center;
+}
+
+.polish-stage:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 36%;
+  right: 0;
+  width: 1px;
+  height: 40%;
+  background: var(--line);
+}
+
+.polish-stage small {
+  display: block;
+  color: var(--ink-faint);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.polish-stage b {
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 600;
+  margin-top: 6px;
+  color: var(--indigo);
+  letter-spacing: -0.02em;
+}
+
+.polish-section {
+  border: none;
+  box-shadow: none;
+  background: var(--paper);
+  border-radius: 14px;
+  outline: 1px solid var(--line);
+  margin-bottom: 16px;
+  overflow: hidden;
+  animation: polish-in 0.55s ease both;
+}
+
+.polish-section .section-head {
+  padding: 0 4px;
+}
+
+.polish-section-pad {
+  padding: 18px 20px 0;
+}
+
+/* Workflows / vault refinements */
+.platform-page.polish-page .admin-hero {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.platform-page.polish-page > .page-masthead {
+  margin-bottom: 22px;
+}
+
+.platform-cap-badges .cap {
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: rgba(244, 246, 251, 0.7);
+}
+
+.platform-cap-badges .cap.on {
+  background: rgba(46, 122, 80, 0.35);
+  border-color: rgba(169, 212, 184, 0.55);
+  color: #d8f0e2;
+}
+
+.platform-cap-badges .cap.off {
+  opacity: 0.65;
+}
+
+.flow-grid {
+  gap: 14px;
+}
+
+.flow-card {
+  border: none;
+  outline: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(165deg, var(--paper), var(--surface));
+  padding: 16px;
+  transition: outline-color 0.2s ease, transform 0.2s ease;
+}
+
+.flow-card:hover {
+  outline-color: #c5cce0;
+  transform: translateY(-2px);
+}
+
+.sod-row,
+.retention-row {
+  border: none;
+  border-radius: 10px;
+  background: var(--surface);
+  outline: 1px solid transparent;
+  transition: outline-color 0.15s ease, background 0.15s ease;
+}
+
+.sod-row:hover,
+.retention-row:hover {
+  background: var(--indigo-tint);
+  outline-color: var(--line);
+}
+
+.retention-years {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.vault-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.vault-stat {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--paper);
+  outline: 1px solid var(--line);
+  animation: polish-in 0.45s ease both;
+}
+
+.vault-stat b {
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-size: 24px;
+  color: var(--indigo);
+}
+
+.vault-stat span {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.action-row .btn:disabled {
+  opacity: 0.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .polish-page,
+  .polish-signal,
+  .polish-kpis .kpi,
+  .polish-section,
+  .vault-stat,
+  .page-masthead::after {
+    animation: none !important;
+  }
+  .flow-card:hover {
+    transform: none;
+  }
+}

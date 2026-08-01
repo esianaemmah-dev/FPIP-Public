@@ -1,0 +1,47 @@
+{
+  "navigationFallback": {
+    "rewrite": "/index.html",
+    "exclude": ["/assets/*", "/*.{css,js,svg,png,ico,woff,woff2}"]
+  },
+  "routes": [
+    {
+      "route": "/login",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/dashboard",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/procurement",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/finance",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/supplier",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/governance",
+      "rewrite": "/index.html"
+    },
+    {
+      "route": "/copilot",
+      "rewrite": "/index.html"
+    }
+  ],
+  "responseOverrides": {
+    "404": {
+      "rewrite": "/index.html",
+      "statusCode": 200
+    }
+  },
+  "globalHeaders": {
+    "X-Content-Type-Options": "nosniff",
+    "X-Frame-Options": "DENY",
+    "Referrer-Policy": "no-referrer"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "logicalName": "fpip_compliancedocument",
+  "displayName": "Compliance Document",
+  "displayCollectionName": "Compliance Documents",
+  "description": "Supplier compliance documents with SharePoint URL reference and status.",
+  "primaryNameAttribute": "fpip_document_type",
+  "columns": [
+    { "name": "fpip_document_type", "type": "string", "displayName": "Document Type", "maxLength": 100 },
+    { "name": "fpip_expiry_date", "type": "date", "displayName": "Expiry Date", "format": "DateOnly" },
+    { "name": "fpip_status", "type": "choice", "displayName": "Status", "options": { "Verified": 1, "Renewal Due": 2, "Expired": 3 }, "default": 1 },
+    { "name": "fpip_sharepoint_url", "type": "url", "displayName": "SharePoint URL", "maxLength": 500, "notes": "Phase 1: plain URL stored here. SharePoint upload UI arrives once native SharePoint document management is enabled (Phase 3)." }
+  ],
+  "lookups": [
+    { "name": "fpip_Supplier", "displayName": "Supplier", "targetTable": "fpip_supplier", "required": true }
+  ],
+  "rowLevelSecurity": "Supplier Portal User: can only read/submit their own compliance documents (referenced Supplier = own)."
+}

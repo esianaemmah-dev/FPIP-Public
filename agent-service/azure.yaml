@@ -1,0 +1,12 @@
+# Azure Developer CLI (azd) configuration for the FPIP agent service.
+# Deploys the FastAPI service to Azure Container Apps with Managed Identity
+# access to Key Vault, Azure OpenAI, and Azure AI Search.
+name: fpip-agent-service
+services:
+  api:
+    project: ./
+    language: py
+    host: containerapp
+    docker:
+      path: Dockerfile
+      context: ./

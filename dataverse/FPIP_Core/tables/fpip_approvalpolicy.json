@@ -1,0 +1,20 @@
+{
+  "logicalName": "fpip_approvalpolicy",
+  "displayName": "Approval Policy",
+  "displayCollectionName": "Approval Policies",
+  "primaryNameAttribute": "fpip_name",
+  "description": "Configurable thresholds and approver mappings for Power Automate approval workflows.",
+  "columns": [
+    { "name": "fpip_name", "displayName": "Policy Name", "type": "string", "required": true },
+    { "name": "fpip_policy_type", "displayName": "Policy Type", "type": "choice", "required": true, "options": ["Requisition", "Tender Award", "Invoice Exception", "Contract Renewal"] },
+    { "name": "fpip_threshold_amount", "displayName": "Threshold Amount", "type": "money" },
+    { "name": "fpip_threshold_currency", "displayName": "Currency", "type": "string", "required": false },
+    { "name": "fpip_primary_approver", "displayName": "Primary Approver", "type": "string", "required": false },
+    { "name": "fpip_escalation_approver", "displayName": "Escalation Approver", "type": "string", "required": false },
+    { "name": "fpip_committee_team", "displayName": "Committee Team Name", "type": "string", "required": false },
+    { "name": "fpip_requires_unanimous", "displayName": "Requires Unanimous Approval", "type": "boolean", "default": false },
+    { "name": "fpip_active", "displayName": "Active", "type": "boolean", "default": true },
+    { "name": "fpip_description", "displayName": "Description", "type": "memo" }
+  ],
+  "lookups": []
+}

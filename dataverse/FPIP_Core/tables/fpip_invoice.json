@@ -1,0 +1,20 @@
+{
+  "logicalName": "fpip_invoice",
+  "displayName": "Invoice",
+  "displayCollectionName": "Invoices",
+  "description": "Supplier invoices with 3-way match status and duplicate flag.",
+  "primaryNameAttribute": "fpip_invoicenumber",
+  "columns": [
+    { "name": "fpip_invoicenumber", "type": "string", "displayName": "Invoice Number", "maxLength": 50 },
+    { "name": "fpip_amount", "type": "money", "displayName": "Amount", "min": 0, "precision": 2 },
+    { "name": "fpip_match_status", "type": "choice", "displayName": "Match Status", "options": { "3-Way Match": 1, "Qty Mismatch": 2, "Manual Review": 3 }, "default": 3 },
+    { "name": "fpip_duplicate_flag", "type": "boolean", "displayName": "Duplicate Flag", "default": false },
+    { "name": "fpip_payment_status", "type": "choice", "displayName": "Payment Status", "options": { "Held": 1, "Approved": 2, "Paid": 3 }, "default": 1 }
+  ],
+  "lookups": [
+    { "name": "fpip_PurchaseOrder", "displayName": "Purchase Order", "targetTable": "fpip_purchaseorder", "required": false },
+    { "name": "fpip_Supplier", "displayName": "Supplier", "targetTable": "fpip_supplier", "required": true }
+  ],
+  "rowLevelSecurity": "Supplier Portal User: can only read their own invoices (referenced Supplier = own).",
+  "notes": "Phase 3 Power Automate: invoice exception approval triggers when match_status != 3-Way Match OR duplicate_flag = true."
+}

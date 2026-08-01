@@ -1,0 +1,120 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2021-09-09/uiFormDefinition.schema.json#",
+  "viewDefinition": {
+    "kind": "Form",
+    "title": "FPIP — Finance & Procurement Intelligence Platform",
+    "blades": [
+      {
+        "name": "installBlade",
+        "label": "FPIP setup",
+        "elements": [
+          {
+            "name": "basics",
+            "type": "Microsoft.Common.Section",
+            "label": "Basics",
+            "elements": [
+              {
+                "name": "region",
+                "type": "Microsoft.Common.DropDown",
+                "label": "Region",
+                "defaultValue": "eastus",
+                "toolTip": "Azure region for the managed resource group. Must support Power Platform / Dataverse.",
+                "constraints": {
+                  "allowedValues": [
+                    { "label": "East US", "value": "eastus" },
+                    { "label": "East US 2", "value": "eastus2" },
+                    { "label": "West Europe", "value": "westeurope" },
+                    { "label": "UK South", "value": "uksouth" },
+                    { "label": "Australia East", "value": "australiaeast" }
+                  ]
+                }
+              },
+              {
+                "name": "environmentName",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Dataverse environment name",
+                "defaultValue": "FPIP Production",
+                "toolTip": "Display name shown in the Power Platform admin center."
+              }
+            ]
+          },
+          {
+            "name": "fabric",
+            "type": "Microsoft.Common.Section",
+            "label": "Microsoft Fabric link",
+            "elements": [
+              {
+                "name": "fabricWorkspaceId",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Fabric workspace resource ID",
+                "toolTip": "The bank's Fabric workspace to link to Dataverse via 'Link to Microsoft Fabric'. Format: /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.Fabric/workspaces/<id>"
+              }
+            ]
+          },
+          {
+            "name": "plan",
+            "type": "Microsoft.Common.Section",
+            "label": "Plan tier",
+            "elements": [
+              {
+                "name": "planTier",
+                "type": "Microsoft.Common.DropDown",
+                "label": "Plan tier",
+                "defaultValue": "Standard",
+                "constraints": {
+                  "allowedValues": [
+                    { "label": "Standard", "value": "Standard" },
+                    { "label": "Premium", "value": "Premium" }
+                  ]
+                }
+              },
+              {
+                "name": "staticWebAppSku",
+                "type": "Microsoft.Common.DropDown",
+                "label": "Static Web App plan",
+                "defaultValue": "Standard",
+                "constraints": {
+                  "allowedValues": [
+                    { "label": "Free", "value": "Free" },
+                    { "label": "Standard", "value": "Standard" }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "name": "advanced",
+            "type": "Microsoft.Common.Section",
+            "label": "Advanced",
+            "elements": [
+              {
+                "name": "agentContainerImage",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Agent service container image",
+                "defaultValue": "ghcr.io/fpip/agent-service:latest",
+                "toolTip": "Override only if you are deploying a custom-built agent-service image."
+              },
+              {
+                "name": "deployMeteringWebhook",
+                "type": "Microsoft.Common.CheckBox",
+                "label": "Deploy Marketplace metering webhook",
+                "defaultValue": false,
+                "toolTip": "Only required for usage-based billing through Partner Center."
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "outputs": {
+    "location": "[steps('installBlade').basics.region]",
+    "environmentName": "[steps('installBlade').basics.environmentName]",
+    "fabricWorkspaceId": "[steps('installBlade').fabric.fabricWorkspaceId]",
+    "planTier": "[steps('installBlade').plan.planTier]",
+    "staticWebAppSku": "[steps('installBlade').plan.staticWebAppSku]",
+    "publisherTenantId": "[tenant().tenantId]",
+    "agentContainerImage": "[steps('installBlade').advanced.agentContainerImage]",
+    "deployMeteringWebhook": "[steps('installBlade').advanced.deployMeteringWebhook]"
+  }
+}

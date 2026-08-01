@@ -1,0 +1,69 @@
+{
+  "name": "FPIP_Invoice_Exception_Approval",
+  "description": "Triggers when an invoice has a duplicate flag or non-3-way match. Routes to Finance Manager for approval. Writes to fpip_invoice and fpip_auditlogentry.",
+  "trigger": {
+    "type": "Dataverse",
+    "entity": "fpip_invoices",
+    "filter": "(fpip_duplicate_flag eq true or fpip_match_status ne 1) and fpip_payment_status eq 1"
+  },
+  "steps": [
+    {
+      "name": "Get_Approval_Policy",
+      "type": "DataverseListRows",
+      "entity": "fpip_approvalpolicies",
+      "filter": "fpip_policy_type eq 3 and fpip_active eq true",
+      "top": 1
+    },
+    {
+      "name": "Create_Approval_Request",
+      "type": "DataverseAddRow",
+      "entity": "fpip_approvalrequests",
+      "fields": {
+        "fpip_record_type": "Invoice Exception",
+        "fpip_related_record": "@{triggerOutputs()?['body/fpip_invoiceid']}",
+        "fpip_amount": "@{triggerOutputs()?['body/fpip_amount']}",
+        "fpip_status": 1,
+        "fpip_requested_by": "Power Automate",
+        "fpip_waiting_since": "@utcNow()"
+      }
+    },
+    {
+      "name": "Start_Finance_Approval",
+      "type": "StartAndWaitForAnApproval",
+      "approvalType": "Approve/Reject - First to respond",
+      "title": "Invoice exception approval",
+      "assignedTo": "[@outputs('Get_Approval_Policy')?['body/value'][0]['fpip_primary_approver']]"
+    },
+    {
+      "name": "Update_Invoice_Status",
+      "type": "DataverseUpdateRecord",
+      "entity": "fpip_invoices",
+      "id": "[@triggerOutputs()?['body/fpip_invoiceid']]",
+      "fields": {
+        "fpip_payment_status": "@{if(equals(outputs('Start_Finance_Approval')?['outcome'], 'Approve'), 2, 1)}"
+      }
+    },
+    {
+      "name": "Update_Approval_Request",
+      "type": "DataverseUpdateRecord",
+      "entity": "fpip_approvalrequests",
+      "id": "[@outputs('Create_Approval_Request')?['body/fpip_approvalrequestid']]",
+      "fields": {
+        "fpip_status": "@{if(equals(outputs('Start_Finance_Approval')?['outcome'], 'Approve'), 2, 3)}"
+      }
+    },
+    {
+      "name": "Write_Audit_Log",
+      "type": "DataverseAddRow",
+      "entity": "fpip_auditlogentries",
+      "fields": {
+        "fpip_timestamp": "@utcNow()",
+        "fpip_actor": "@{outputs('Start_Finance_Approval')?['responder']}",
+        "fpip_actor_type": 1,
+        "fpip_action": "@{concat('Invoice exception ', outputs('Start_Finance_Approval')?['outcome'], ' via Power Automate')}",
+        "fpip_entity_reference": "@{triggerOutputs()?['body/fpip_invoicenumber']}",
+        "fpip_source_detail": "Power Automate · Invoice Exception Approval"
+      }
+    }
+  ]
+}

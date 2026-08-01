@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+*.local
+
+# Env files (never commit secrets — FPIP uses Key Vault in Azure; local dev uses .env.local)
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+*.log
+
+# Vite
+.vite/
+
+# TypeScript build cache
+*.tsbuildinfo
+
+# Azure / Dataverse tooling artifacts
+.dynamics365/
+bin/
+obj/
+
+# OS
+[Tt]humbs.db

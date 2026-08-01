@@ -1,0 +1,324 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "2.0.0.0",
+  "parameters": {
+    "location": {
+      "type": "string",
+      "metadata": {
+        "description": "Region"
+      }
+    },
+    "environmentName": {
+      "type": "string",
+      "metadata": {
+        "description": "Dataverse env display name"
+      }
+    },
+    "fabricWorkspaceId": {
+      "type": "string",
+      "metadata": {
+        "description": "Fabric workspace resource ID"
+      }
+    },
+    "planTier": {
+      "type": "string",
+      "allowedValues": [
+        "Standard",
+        "Premium"
+      ],
+      "defaultValue": "Standard"
+    },
+    "publisherTenantId": {
+      "type": "string",
+      "metadata": {
+        "description": "Publisher tenant"
+      }
+    },
+    "staticWebAppSku": {
+      "type": "string",
+      "allowedValues": [
+        "Free",
+        "Standard"
+      ],
+      "defaultValue": "Standard"
+    },
+    "agentContainerImage": {
+      "type": "string",
+      "defaultValue": "ghcr.io/fpip/agent-service:latest"
+    },
+    "deployMeteringWebhook": {
+      "type": "bool",
+      "defaultValue": false
+    },
+    "deployDataverseEnvironment": {
+      "type": "bool",
+      "defaultValue": false,
+      "metadata": {
+        "description": "Deploy Dataverse environment via ARM. Disable if Microsoft.PowerPlatform/environments is not available in the subscription."
+      }
+    },
+    "dataverseEnvironmentUrl": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "URL of an existing Dataverse environment if deployDataverseEnvironment is false."
+      }
+    }
+  },
+  "variables": {
+    "uniqueString": "[uniqueString(subscription().id, resourceGroup().id)]",
+    "keyVaultName": "[concat('fpip-kv-', variables('uniqueString'))]",
+    "staticWebAppName": "[concat('fpip-web-', variables('uniqueString'))]",
+    "dataverseEnvName": "[concat('fpip-', variables('uniqueString'))]",
+    "containerAppName": "[concat('fpip-agent-', variables('uniqueString'))]",
+    "containerEnvName": "[concat('fpip-agent-env-', variables('uniqueString'))]",
+    "logAnalyticsName": "[concat('fpip-logs-', variables('uniqueString'))]",
+    "functionAppName": "[concat('fpip-metering-', variables('uniqueString'))]",
+    "storageAccountName": "[concat('fpip', variables('uniqueString'), 'func')]",
+    "applicationInsightsName": "[concat('fpip-ai-', variables('uniqueString'))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.PowerPlatform/environments",
+      "apiVersion": "2020-10-07",
+      "name": "[variables('dataverseEnvName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "displayName": "[parameters('environmentName')]",
+        "environmentType": "Production",
+        "linkedMetadata": {
+          "fabricWorkspaceId": "[parameters('fabricWorkspaceId')]"
+        }
+      },
+      "condition": "[parameters('deployDataverseEnvironment')]"
+    },
+    {
+      "type": "Microsoft.OperationalInsights/workspaces",
+      "apiVersion": "2022-10-01",
+      "name": "[variables('logAnalyticsName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "name": "PerGB2018"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.KeyVault/vaults",
+      "apiVersion": "2022-07-01",
+      "name": "[variables('keyVaultName')]",
+      "location": "[parameters('location')]",
+      "properties": {
+        "sku": {
+          "family": "A",
+          "name": "standard"
+        },
+        "tenantId": "[parameters('publisherTenantId')]",
+        "enableRbacAuthorization": true,
+        "publicNetworkAccess": "enabled"
+      }
+    },
+    {
+      "type": "Microsoft.Web/staticSites",
+      "apiVersion": "2022-09-01",
+      "name": "[variables('staticWebAppName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "[parameters('staticWebAppSku')]"
+      },
+      "properties": {
+        "repositoryUrl": "https://github.com/oticgroup/fpip.git",
+        "branch": "main",
+        "buildProperties": {
+          "appLocation": "/app",
+          "outputLocation": "dist",
+          "appArtifactLocation": "dist"
+        },
+        "enterpriseGradeCdnStatus": "Disabled"
+      }
+    },
+    {
+      "type": "Microsoft.App/managedEnvironments",
+      "apiVersion": "2022-10-01",
+      "name": "[variables('containerEnvName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Consumption"
+      },
+      "properties": {
+        "appLogsConfiguration": {
+          "destination": "log-analytics",
+          "logAnalyticsConfiguration": {
+            "customerId": "[reference(resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))).customerId]",
+            "sharedKey": "[listKeys(resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName')), '2022-10-01').primarySharedKey]"
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.App/containerApps",
+      "apiVersion": "2022-10-01",
+      "name": "[variables('containerAppName')]",
+      "location": "[parameters('location')]",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "managedEnvironmentId": "[resourceId('Microsoft.App/managedEnvironments', variables('containerEnvName'))]",
+        "configuration": {
+          "activeRevisionsMode": "Single",
+          "ingress": {
+            "external": true,
+            "targetPort": 8000,
+            "transport": "http"
+          }
+        },
+        "template": {
+          "containers": [
+            {
+              "name": "fpip-agent-service",
+              "image": "[parameters('agentContainerImage')]",
+              "env": [
+                {
+                  "name": "AZURE_KEY_VAULT_URL",
+                  "value": "[reference(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))).vaultUri]"
+                },
+                {
+                  "name": "DATAVERSE_URL",
+                  "value": "[if(parameters('deployDataverseEnvironment'), concat('https://', variables('dataverseEnvName'), '.crm.dynamics.com'), parameters('dataverseEnvironmentUrl'))]"
+                },
+                {
+                  "name": "PORT",
+                  "value": "8000"
+                }
+              ],
+              "resources": {
+                "cpu": 1,
+                "memory": "2Gi"
+              }
+            }
+          ],
+          "scale": {
+            "minReplicas": 1,
+            "maxReplicas": 5
+          }
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.App/managedEnvironments', variables('containerEnvName'))]",
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Insights/components",
+      "apiVersion": "2020-02-02",
+      "name": "[variables('applicationInsightsName')]",
+      "location": "[parameters('location')]",
+      "kind": "web",
+      "properties": {
+        "Application_Type": "web",
+        "WorkspaceResourceId": "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.OperationalInsights/workspaces', variables('logAnalyticsName'))]"
+      ]
+    },
+    {
+      "condition": "[parameters('deployMeteringWebhook')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2022-09-01",
+      "name": "[variables('storageAccountName')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "kind": "StorageV2",
+      "properties": {}
+    },
+    {
+      "condition": "[parameters('deployMeteringWebhook')]",
+      "type": "Microsoft.Web/serverfarms",
+      "apiVersion": "2022-03-01",
+      "name": "[concat(variables('functionAppName'), '-plan')]",
+      "location": "[parameters('location')]",
+      "sku": {
+        "name": "Y1",
+        "tier": "Dynamic"
+      },
+      "kind": "functionapp",
+      "properties": {
+        "reserved": true
+      }
+    },
+    {
+      "condition": "[parameters('deployMeteringWebhook')]",
+      "type": "Microsoft.Web/sites",
+      "apiVersion": "2022-03-01",
+      "name": "[variables('functionAppName')]",
+      "location": "[parameters('location')]",
+      "kind": "functionapp,linux",
+      "identity": {
+        "type": "SystemAssigned"
+      },
+      "properties": {
+        "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', concat(variables('functionAppName'), '-plan'))]",
+        "siteConfig": {
+          "appSettings": [
+            {
+              "name": "FUNCTIONS_EXTENSION_VERSION",
+              "value": "~4"
+            },
+            {
+              "name": "FUNCTIONS_WORKER_RUNTIME",
+              "value": "python"
+            },
+            {
+              "name": "PYTHON_ENABLE_WORKER_EXTENSIONS",
+              "value": "1"
+            },
+            {
+              "name": "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "value": "[reference(resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))).InstrumentationKey]"
+            },
+            {
+              "name": "AzureWebJobsStorage",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('storageAccountName'), ';EndpointSuffix=core.windows.net;AccountKey=', listKeys(resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName')), '2022-09-01').keys[0].value)]"
+            }
+          ]
+        }
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/serverfarms', concat(variables('functionAppName'), '-plan'))]",
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('storageAccountName'))]",
+        "[resourceId('Microsoft.Insights/components', variables('applicationInsightsName'))]"
+      ]
+    }
+  ],
+  "outputs": {
+    "dataverseEnvironmentId": {
+      "type": "string",
+      "value": "[resourceId('Microsoft.PowerPlatform/environments', variables('dataverseEnvName'))]",
+      "condition": "[parameters('deployDataverseEnvironment')]"
+    },
+    "staticWebAppDefaultHostname": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.Web/staticSites', variables('staticWebAppName'))).defaultHostname]"
+    },
+    "keyVaultUri": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))).vaultUri]"
+    },
+    "agentServiceUrl": {
+      "type": "string",
+      "value": "[concat('https://', reference(resourceId('Microsoft.App/containerApps', variables('containerAppName'))).configuration.ingress.fqdn)]"
+    },
+    "meteringWebhookUrl": {
+      "type": "string",
+      "condition": "[parameters('deployMeteringWebhook')]",
+      "value": "[concat('https://', reference(resourceId('Microsoft.Web/sites', variables('functionAppName'))).defaultHostName, '/api/MeteringWebhook')]"
+    }
+  }
+}

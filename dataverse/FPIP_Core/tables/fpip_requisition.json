@@ -1,0 +1,19 @@
+{
+  "logicalName": "fpip_requisition",
+  "displayName": "Requisition",
+  "displayCollectionName": "Requisitions",
+  "description": "Procurement requisitions with budget check and status workflow.",
+  "primaryNameAttribute": "fpip_title",
+  "columns": [
+    { "name": "fpip_title", "type": "string", "displayName": "Title", "maxLength": 200, "required": true },
+    { "name": "fpip_department", "type": "string", "displayName": "Department", "maxLength": 100 },
+    { "name": "fpip_category", "type": "string", "displayName": "Category", "maxLength": 100 },
+    { "name": "fpip_amount", "type": "money", "displayName": "Amount", "min": 0, "precision": 2 },
+    { "name": "fpip_status", "type": "choice", "displayName": "Status", "options": { "Draft": 1, "Sourcing": 2, "Awaiting Approval": 3, "Escalated": 4, "PO Issued": 5 }, "default": 1 },
+    { "name": "fpip_budget_check_result", "type": "choice", "displayName": "Budget Check Result", "options": { "Within Budget": 1, "Exceeds Budget": 2 } }
+  ],
+  "lookups": [
+    { "name": "fpip_Supplier", "displayName": "Supplier", "targetTable": "fpip_supplier", "required": false, "notes": "Optional at requisition stage." }
+  ],
+  "notes": "Phase 1 definition-of-done: a requisition created in the UI persists here and is visible on reload."
+}

@@ -1,0 +1,74 @@
+{
+  "name": "FPIP_Requisition_Approval",
+  "description": "Routes requisition approval requests based on the configurable Approval Policy table. Writes the decision back to fpip_requisition and fpip_auditlogentry.",
+  "trigger": {
+    "type": "Dataverse",
+    "entity": "fpip_approvalrequests",
+    "filter": "fpip_record_type eq 'Requisition' and fpip_status eq 1"
+  },
+  "steps": [
+    {
+      "name": "Get_Requisition",
+      "type": "DataverseGetRecord",
+      "entity": "fpip_requisitions",
+      "id": "[@triggerOutputs()?['body/_fpip_related_requisition_value']]"
+    },
+    {
+      "name": "Get_Approval_Policy",
+      "type": "DataverseListRows",
+      "entity": "fpip_approvalpolicies",
+      "filter": "fpip_policy_type eq 1 and fpip_active eq true",
+      "top": 1
+    },
+    {
+      "name": "Route_By_Threshold",
+      "type": "Condition",
+      "expression": "greater(outputs('Get_Requisition')?['body/fpip_amount'], outputs('Get_Approval_Policy')?['body/value'][0]['fpip_threshold_amount'])"
+    },
+    {
+      "name": "Start_Approval_Manager",
+      "type": "StartAndWaitForAnApproval",
+      "approvalType": "Approve/Reject - First to respond",
+      "title": "Approve requisition",
+      "assignedTo": "[@outputs('Get_Approval_Policy')?['body/value'][0]['fpip_primary_approver']]"
+    },
+    {
+      "name": "Start_Approval_Director",
+      "type": "StartAndWaitForAnApproval",
+      "approvalType": "Approve/Reject - First to respond",
+      "title": "Escalated requisition approval",
+      "assignedTo": "[@outputs('Get_Approval_Policy')?['body/value'][0]['fpip_escalation_approver']]"
+    },
+    {
+      "name": "Update_Requisition_Status",
+      "type": "DataverseUpdateRecord",
+      "entity": "fpip_requisitions",
+      "id": "[@triggerOutputs()?['body/_fpip_related_requisition_value']]",
+      "fields": {
+        "fpip_status": "@{if(equals(outputs('Start_Approval_*')?['outcome'], 'Approve'), 5, 4)}"
+      }
+    },
+    {
+      "name": "Update_Approval_Request",
+      "type": "DataverseUpdateRecord",
+      "entity": "fpip_approvalrequests",
+      "id": "[@triggerOutputs()?['body/fpip_approvalrequestid']}]",
+      "fields": {
+        "fpip_status": "@{if(equals(outputs('Start_Approval_*')?['outcome'], 'Approve'), 2, 3)}"
+      }
+    },
+    {
+      "name": "Write_Audit_Log",
+      "type": "DataverseAddRow",
+      "entity": "fpip_auditlogentries",
+      "fields": {
+        "fpip_timestamp": "@utcNow()",
+        "fpip_actor": "@{outputs('Start_Approval_*')?['responder']}",
+        "fpip_actor_type": 1,
+        "fpip_action": "@{concat('Requisition ', outputs('Start_Approval_*')?['outcome'], ' via Power Automate')}",
+        "fpip_entity_reference": "@{outputs('Get_Requisition')?['body/fpip_title']}",
+        "fpip_source_detail": "Power Automate · Requisition Approval"
+      }
+    }
+  ]
+}

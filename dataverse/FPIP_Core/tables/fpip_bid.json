@@ -1,0 +1,19 @@
+{
+  "logicalName": "fpip_bid",
+  "displayName": "Bid",
+  "displayCollectionName": "Bids",
+  "description": "Supplier bids against a tender with evaluation scores.",
+  "primaryNameAttribute": "fpip_name",
+  "columns": [
+    { "name": "fpip_name", "type": "string", "displayName": "Name", "maxLength": 200 },
+    { "name": "fpip_pricescore", "type": "decimal", "displayName": "Price Score", "min": 0, "max": 100, "precision": 0 },
+    { "name": "fpip_compliancescore", "type": "decimal", "displayName": "Compliance Score", "min": 0, "max": 100, "precision": 0 },
+    { "name": "fpip_deliveryscore", "type": "decimal", "displayName": "Delivery Score", "min": 0, "max": 100, "precision": 0 },
+    { "name": "fpip_status", "type": "choice", "displayName": "Status", "options": { "Submitted": 1, "Under Review": 2, "Shortlisted": 3, "Rejected": 4 }, "default": 1 }
+  ],
+  "lookups": [
+    { "name": "fpip_Tender", "displayName": "Tender", "targetTable": "fpip_tender", "required": true },
+    { "name": "fpip_Supplier", "displayName": "Supplier", "targetTable": "fpip_supplier", "required": true }
+  ],
+  "rowLevelSecurity": "Supplier Portal User: can only read/write their own bids (referenced Supplier = own)."
+}

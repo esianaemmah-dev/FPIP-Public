@@ -1,0 +1,24 @@
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+pydantic>=2.7.0
+python-dotenv>=1.0.0
+
+# LangChain / LangGraph
+langchain>=0.2.0
+langgraph>=0.2.0
+langchain-core>=0.2.0
+langchain-openai>=0.1.0
+langgraph-checkpoint-cosmos>=0.1.0
+
+# Azure
+azure-identity>=1.16.0
+azure-keyvault-secrets>=4.8.0
+azure-search-documents>=11.6.0
+azure-cosmos>=4.7.0
+
+# Dataverse / Entra ID service-principal auth
+msal>=1.28.0
+requests>=2.32.0
+
+# Microsoft Fabric SQL endpoint
+pyodbc>=5.1.0

@@ -1,0 +1,19 @@
+{
+  "logicalName": "fpip_contract",
+  "displayName": "Contract",
+  "displayCollectionName": "Contracts",
+  "description": "Supplier contracts with value, term and expiry for renewal tracking.",
+  "primaryNameAttribute": "fpip_title",
+  "columns": [
+    { "name": "fpip_title", "type": "string", "displayName": "Title", "maxLength": 200, "required": true },
+    { "name": "fpip_value", "type": "money", "displayName": "Value", "min": 0, "precision": 2 },
+    { "name": "fpip_term_months", "type": "whole", "displayName": "Term (months)", "min": 1 },
+    { "name": "fpip_expiry_date", "type": "date", "displayName": "Expiry Date", "format": "DateOnly" },
+    { "name": "fpip_renewal_approval_created", "type": "boolean", "displayName": "Renewal Approval Created", "default": false },
+    { "name": "fpip_status", "type": "choice", "displayName": "Status", "options": ["Active", "Expired", "Renewed"] }
+  ],
+  "lookups": [
+    { "name": "fpip_Supplier", "displayName": "Supplier", "targetTable": "fpip_supplier", "required": true }
+  ],
+  "notes": "Phase 3 Power Automate: contract renewal approval triggers when expiry_date within 90 days and no renewal record exists."
+}

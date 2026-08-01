@@ -1,0 +1,17 @@
+{
+  "logicalName": "fpip_approvalrequest",
+  "displayName": "Approval Request",
+  "displayCollectionName": "Approval Requests",
+  "description": "Approval requests routed by Power Automate (Phase 3). Polymorphic related-record reference until flows are built.",
+  "primaryNameAttribute": "fpip_record_type",
+  "columns": [
+    { "name": "fpip_record_type", "type": "choice", "displayName": "Record Type", "options": { "Purchase Order": 1, "Tender Award": 2, "Contract Renewal": 3, "Invoice Exception": 4 } },
+    { "name": "fpip_related_record", "type": "string", "displayName": "Related Record", "maxLength": 200, "notes": "Polymorphic: stores the related record's GUID + table name (e.g. 'p1|fpip_purchaseorders') until Power Automate is built." },
+    { "name": "fpip_amount", "type": "money", "displayName": "Amount", "min": 0, "precision": 2 },
+    { "name": "fpip_status", "type": "choice", "displayName": "Status", "options": { "Pending": 1, "Approved": 2, "Rejected": 3, "Escalated": 4 }, "default": 1 },
+    { "name": "fpip_requested_by", "type": "string", "displayName": "Requested By", "maxLength": 150 },
+    { "name": "fpip_waiting_since", "type": "datetime", "displayName": "Waiting Since", "format": "DateAndTime" }
+  ],
+  "lookups": [],
+  "notes": "This is the table Phase-3 Power Automate flows act on (requisition / tender award / invoice exception / contract renewal approvals)."
+}

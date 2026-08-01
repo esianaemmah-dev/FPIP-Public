@@ -1,0 +1,16 @@
+{
+  "logicalName": "fpip_tender",
+  "displayName": "Tender",
+  "displayCollectionName": "Tenders",
+  "description": "RFQ/RFP tenders with status workflow and closing date.",
+  "primaryNameAttribute": "fpip_title",
+  "columns": [
+    { "name": "fpip_title", "type": "string", "displayName": "Title", "maxLength": 200, "required": true },
+    { "name": "fpip_category", "type": "string", "displayName": "Category", "maxLength": 100 },
+    { "name": "fpip_status", "type": "choice", "displayName": "Status", "options": { "Draft": 1, "Open": 2, "Evaluation": 3, "Awarded": 4, "Closed": 5 }, "default": 1 },
+    { "name": "fpip_closingdate", "type": "date", "displayName": "Closing Date", "format": "DateOnly" },
+    { "name": "fpip_estimatedvalue", "type": "money", "displayName": "Estimated Value", "min": 0, "precision": 2 }
+  ],
+  "lookups": [],
+  "notes": "Phase 3 Power Automate: tender award approval routes to Procurement Committee (all members must approve before status moves to Awarded)."
+}

@@ -1,0 +1,57 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/viewdefinition/0.0.1#ViewDefinition.json",
+  "views": [
+    {
+      "kind": "Overview",
+      "properties": {
+        "displayName": "FPIP overview",
+        "version": "1.0.0",
+        "blades": [
+          {
+            "name": "fpip_overview",
+            "type": "OverviewBlade",
+            "properties": {
+              "title": "FPIP — Finance & Procurement Intelligence Platform",
+              "description": "Azure Managed Application for financial institutions. Dataverse-backed finance & procurement intelligence with a LangGraph agent layer (Phase 2).",
+              "learnMoreUrl": "https://learn.microsoft.com/azure/managed-applications/"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "Metrics",
+      "properties": {
+        "displayName": "Metrics",
+        "version": "1.0.0",
+        "blades": [
+          {
+            "name": "fpip_metrics",
+            "type": "MetricsBlade",
+            "properties": {
+              "resource": "[reference().staticWebAppDefaultHostname]",
+              "title": "FPIP application metrics"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "kind": "CustomResources",
+      "properties": {
+        "displayName": "Dataverse environment",
+        "version": "1.0.0",
+        "blades": [
+          {
+            "name": "fpip_dataverse",
+            "type": "ResourceOverviewBlade",
+            "properties": {
+              "title": "Dataverse environment (FPIP_Core)",
+              "description": "The Dataverse environment hosting the FPIP_Core solution. Schema, security roles, and audit are configured via the Power Platform admin center."
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

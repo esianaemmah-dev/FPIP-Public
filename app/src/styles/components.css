@@ -1,0 +1,338 @@
+/* FPIP reusable component styles — ported from FPIP_UI_Demo.html. Presentation only;
+   open/active states are toggled by React. */
+
+/* Layout grids */
+.grid {
+  display: grid;
+  gap: 16px;
+}
+.g-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
+.g-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+.g-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (max-width: 1100px) {
+  .g-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .g-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Cards */
+.card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  box-shadow: var(--shadow);
+}
+.card-flush {
+  padding: 0;
+  overflow: hidden;
+}
+.section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  gap: 12px;
+}
+.section-head h2 {
+  font-size: 19px;
+}
+.section-head .link-btn {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--teal);
+  background: none;
+  border: none;
+  padding: 0;
+}
+
+/* KPI cards */
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.kpi-label {
+  font-size: 12px;
+  color: var(--ink-faint);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.kpi-value {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 600;
+}
+.kpi-delta {
+  font-size: 12px;
+  font-weight: 600;
+}
+.up {
+  color: var(--success);
+}
+.down {
+  color: var(--danger);
+}
+.flat {
+  color: var(--ink-faint);
+}
+
+/* Pills */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 100px;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+.pill-success {
+  background: var(--success-tint);
+  color: var(--success);
+}
+.pill-success .pill-dot {
+  background: var(--success);
+}
+.pill-warn {
+  background: var(--warn-tint);
+  color: var(--warn);
+}
+.pill-warn .pill-dot {
+  background: var(--warn);
+}
+.pill-danger {
+  background: var(--danger-tint);
+  color: var(--danger);
+}
+.pill-danger .pill-dot {
+  background: var(--danger);
+}
+.pill-neutral {
+  background: var(--line-soft);
+  color: var(--ink-soft);
+}
+.pill-neutral .pill-dot {
+  background: var(--ink-faint);
+}
+.pill-ai {
+  background: var(--teal-tint);
+  color: var(--teal);
+}
+.pill-ai .pill-dot {
+  background: var(--teal);
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th {
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--ink-faint);
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--line);
+  font-weight: 700;
+  background: var(--surface);
+}
+td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line-soft);
+  font-size: 13px;
+  vertical-align: middle;
+}
+tr:last-child td {
+  border-bottom: none;
+}
+tbody tr:hover {
+  background: var(--surface);
+}
+.num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12.5px;
+}
+
+/* Buttons */
+.btn {
+  border: none;
+  border-radius: 8px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: 0.12s;
+}
+.btn-primary {
+  background: var(--indigo);
+  color: #fff;
+}
+.btn-primary:hover {
+  background: var(--indigo-2);
+}
+.btn-brass {
+  background: var(--brass);
+  color: #fff;
+}
+.btn-brass:hover {
+  background: #8f611f;
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink-soft);
+}
+.btn-ghost:hover {
+  border-color: var(--ink-faint);
+}
+.btn-sm {
+  padding: 6px 11px;
+  font-size: 12px;
+}
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 18px;
+}
+.tab {
+  padding: 10px 4px;
+  margin-right: 22px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  border: none;
+  background: none;
+  border-bottom: 2px solid transparent;
+  position: relative;
+  top: 1px;
+}
+.tab.active {
+  color: var(--ink);
+  border-bottom-color: var(--brass);
+}
+
+/* Progress / score bars */
+.bar-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+.bar-label {
+  width: 132px;
+  font-size: 12.5px;
+  color: var(--ink-soft);
+  flex: 0 0 auto;
+}
+.bar-track {
+  flex: 1;
+  height: 8px;
+  background: var(--line-soft);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.bar-fill {
+  height: 100%;
+  border-radius: 5px;
+  background: var(--indigo-2);
+}
+.bar-val {
+  width: 52px;
+  text-align: right;
+  font-size: 12px;
+  font-family: 'IBM Plex Mono', monospace;
+  color: var(--ink-soft);
+  flex: 0 0 auto;
+}
+
+/* Ledger background (invoice queue) */
+.ledger-bg {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent 27px,
+    var(--line-soft) 28px
+  );
+}
+
+/* AI recommendation panel */
+.ai-panel {
+  background: var(--teal-tint);
+  border: 1px solid #cfe7e4;
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-top: 16px;
+}
+.ai-tag {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--teal);
+  margin-bottom: 8px;
+}
+.ai-tag svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* Brand seal (Copilot empty state) */
+.seal {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: var(--indigo);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 14px;
+}
+.seal-lg {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  font-size: 22px;
+}
+
+/* Scroll-to highlight (sidebar nav to a card) */
+@keyframes flashHighlight {
+  0% {
+    box-shadow: 0 0 0 3px rgba(27, 111, 106, 0.35);
+  }
+  100% {
+    box-shadow: var(--shadow);
+  }
+}
+.flash-highlight {
+  animation: flashHighlight 1.4s ease-out;
+}

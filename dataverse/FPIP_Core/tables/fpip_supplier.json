@@ -1,0 +1,17 @@
+{
+  "logicalName": "fpip_supplier",
+  "displayName": "Supplier",
+  "displayCollectionName": "Suppliers",
+  "description": "Prequalified/approved suppliers with risk and compliance info.",
+  "primaryNameAttribute": "fpip_name",
+  "columns": [
+    { "name": "fpip_name", "type": "string", "displayName": "Name", "maxLength": 200, "required": true },
+    { "name": "fpip_status", "type": "choice", "displayName": "Status", "options": { "Prequalified": 1, "Approved": 2, "Suspended": 3 }, "default": 1 },
+    { "name": "fpip_category", "type": "string", "displayName": "Category", "maxLength": 100 },
+    { "name": "fpip_riskscore", "type": "decimal", "displayName": "Risk Score", "min": 0, "max": 100, "precision": 2 },
+    { "name": "fpip_taxcertexpiry", "type": "date", "displayName": "Tax Cert Expiry", "format": "DateOnly" }
+  ],
+  "lookups": [],
+  "rowLevelSecurity": "A Supplier portal user can only read their own record — configure via a security role scoped to the record owner/team.",
+  "notes": "Supplier isolation guarantee: verify with a real test Supplier user before calling Task 1 done."
+}
