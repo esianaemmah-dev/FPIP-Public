@@ -20,17 +20,7 @@
         Loading FPIP…
       </div>
     </div>
-    <script>
-      window.addEventListener('error', function (e) {
-        var root = document.getElementById('root');
-        if (!root) return;
-        root.innerHTML =
-          '<div style="padding:32px;font-family:system-ui,sans-serif;color:#b91c1c">' +
-          '<h1>FPIP failed to load</h1><pre style="white-space:pre-wrap">' +
-          String((e && e.message) || e) +
-          '</pre></div>';
-      });
-    </script>
+    <script type="module" src="/src/loadFailure.ts"></script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

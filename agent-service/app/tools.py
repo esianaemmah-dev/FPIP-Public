@@ -111,7 +111,19 @@ def search_contracts_tool(query: str, top_k: int = 5) -> str:
 def search_supplier_documents_tool(query: str, top_k: int = 5) -> str:
     """Search supplier-submitted compliance and onboarding documents (fpip-supplier-docs-index)."""
     try:
-        results = search_documents("fpip-supplier-docs-index", query, top_k)
+        ctx = _current_user_context()
+        supplier_filter = None
+        if ctx.get("role") == "supplier":
+            supplier_id = str(ctx.get("supplier_id") or "")
+            if not supplier_id:
+                return "Error: supplier identity is required."
+            supplier_filter = f"supplier_id eq '{supplier_id.replace(chr(39), chr(39) * 2)}'"
+        results = search_documents(
+            "fpip-supplier-docs-index",
+            query,
+            top_k,
+            filter_expression=supplier_filter,
+        )
         return json.dumps(results, default=str, indent=2)
     except Exception as exc:
         return f"Error searching supplier documents: {exc}"

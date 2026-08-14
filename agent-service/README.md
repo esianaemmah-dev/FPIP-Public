@@ -37,9 +37,21 @@ React UI  ──►  POST /agents/{agent_id}/invoke  (SSE stream)
 
 ## Configuration
 
-In production, set only `AZURE_KEY_VAULT_URL`. The Container App's Managed
-Identity fetches all other secrets from Key Vault. Local development can fall
-back to environment variables listed in `.env.example`.
+In production, secrets are loaded through `AZURE_KEY_VAULT_URL`; non-secret
+identity controls remain explicit Container App environment settings. Local
+development can fall back to environment variables listed in `.env.example`.
+
+Required production identity settings:
+
+| Setting | Purpose |
+|---|---|
+| `APP_ENV=production` | Activates fail-closed production checks |
+| `AUTH_DISABLED=false` | Prevents local authentication bypass |
+| `AGENT_API_TENANT_ID` | Customer Entra tenant accepted by the API |
+| `AGENT_API_AUDIENCE` | FPIP Agent Service application ID URI |
+| `ENTRA_GROUP_ROLE_MAP` | Optional group-object-ID to FPIP-role JSON mapping |
+| `SUPPLIER_ID_CLAIM` | Verified token claim carrying the Dataverse supplier GUID |
+| `CORS_ORIGINS` | Exact approved SPA origins; wildcards are not used |
 
 Key Vault secret names:
 
@@ -65,11 +77,15 @@ indexes. No new code is required to add a persona.
 
 ## Tool boundaries
 
-- `dataverse_query_tool` — read-only GET against FPIP_Core tables. Supplier
-  isolation is enforced by appending a supplier filter when `user_context.role`
-  is `'supplier'`.
+- `dataverse_query_tool` — read-only GET against FPIP_Core tables. The API derives
+  identity and role from a verified Entra token, applies an agent-specific table
+  allowlist, and requires supplier self-filters for supplier-facing records.
 - `fabric_sql_query_tool` — only predefined allowlisted queries; the LLM cannot
   generate arbitrary SQL.
 - `search_*_tool` — each searches only the Azure AI Search index named in the
-  tool; agents receive only the indexes configured in their `grounding_indexes`.
+  tool; supplier-document search adds a verified supplier filter.
 - `write_audit_log_tool` — best-effort trail of AI-inspected records.
+
+External thread IDs are hashed together with the verified Entra subject before
+they reach the LangGraph checkpointer, preventing one user from retrieving
+another user's conversation by guessing a thread ID.

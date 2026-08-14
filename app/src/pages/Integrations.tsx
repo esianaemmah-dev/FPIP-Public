@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Icon } from '@/components/Icons';
 import { useRole } from '@/context/RoleContext';
 import { useModal } from '@/context/ModalContext';
@@ -35,10 +34,14 @@ export function Integrations() {
   const canManage = can('integration_admin') || can('admin');
   const { openModal, closeModal } = useModal();
   const { showToast } = useToast();
-  const [statuses, setStatuses] = useState<Record<string, IntegrationDef['status']>>({});
-
   function getStatus(item: IntegrationDef): IntegrationDef['status'] {
-    return statuses[item.id] ?? item.status;
+    if (item.id === 'dataverse' && import.meta.env.VITE_DATAVERSE_URL && !import.meta.env.VITE_DATAVERSE_URL.includes('<')) {
+      return 'Configured';
+    }
+    if (item.id === 'entra' && import.meta.env.VITE_DISABLE_MS_AUTH !== 'true') {
+      return 'Configured';
+    }
+    return item.status;
   }
 
   function openConfigure(item: IntegrationDef) {
@@ -50,10 +53,10 @@ export function Integrations() {
         <div className="int-config-form">
           <p style={{ fontSize: 13, color: 'var(--ink-soft)', marginTop: 0 }}>{item.description}</p>
           {fields.map((f) => (
-            <label key={f.label} className="studio-field">
+            <div key={f.label} className="studio-field">
               <span>{f.label}</span>
-              <input placeholder={f.placeholder} defaultValue={f.placeholder.includes('org') ? import.meta.env.VITE_DATAVERSE_URL : ''} />
-            </label>
+              <code>{f.placeholder}</code>
+            </div>
           ))}
           <p className="int-config-note">Secrets are stored in Azure Key Vault — never in the browser.</p>
         </div>
@@ -63,26 +66,11 @@ export function Integrations() {
           <button type="button" className="btn btn-ghost btn-sm" onClick={closeModal}>
             Cancel
           </button>
-          <button
-            type="button"
-            className="btn btn-ghost btn-sm"
-            onClick={() => {
-              showToast(`Connection test sent for ${item.name}`);
-              closeModal();
-            }}
-          >
-            Test connection
-          </button>
-          <button
-            type="button"
-            className="btn btn-primary btn-sm"
-            onClick={() => {
-              setStatuses((s) => ({ ...s, [item.id]: 'Connected' }));
-              showToast(`${item.name} saved — connector marked Connected`);
-              closeModal();
-            }}
-          >
-            Save
+          <button type="button" className="btn btn-primary btn-sm" onClick={() => {
+            showToast(`${item.name} configuration belongs in the customer Azure tenant`);
+            closeModal();
+          }}>
+            Understood
           </button>
         </>
       ),
@@ -99,7 +87,7 @@ export function Integrations() {
             Standard platform connectors for identity, operational data, documents, AI grounding,
             and workflow.{' '}
             {canManage
-              ? 'Configure endpoints here; secrets live in Key Vault.'
+              ? 'Review required settings here; apply them through the customer Azure deployment and Key Vault.'
               : 'View-only for your role — ask Platform Admin to change connectors.'}
           </p>
         </div>
@@ -178,7 +166,7 @@ function Section({
               </div>
               {canManage ? (
                 <button type="button" className="btn btn-ghost btn-sm" onClick={() => onConfigure(item)}>
-                  Configure
+                  Setup guide
                 </button>
               ) : null}
             </article>

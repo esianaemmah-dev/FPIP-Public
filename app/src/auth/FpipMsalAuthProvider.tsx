@@ -6,8 +6,9 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react
 import { useMsal, useIsAuthenticated } from '@azure/msal-react';
 import { InteractionStatus } from '@azure/msal-browser';
 import { AuthContext, type FpipAuth } from '@/context/AuthContext';
-import { loginRequest, dataverseTokenRequest } from './msalConfig';
+import { loginRequest, dataverseTokenRequest, agentTokenRequest } from './msalConfig';
 import { setDataverseTokenProvider } from '@/api/dataverseClient';
+import { setAgentTokenProvider } from '@/api/agentService';
 import { LoadingScreen } from '@/components/Screens';
 import { Seal } from '@/components/Seal';
 
@@ -45,13 +46,29 @@ export function FpipMsalAuthProvider({ children }: { children: ReactNode }) {
     }
   }, [instance, account]);
 
+  const getAgentToken = useCallback(async (): Promise<string> => {
+    const active = account ?? instance.getActiveAccount();
+    if (!active) throw new Error('Not authenticated: no Entra ID account available.');
+    if (agentTokenRequest.scopes.length === 0) {
+      throw new Error('VITE_AGENT_API_SCOPE is not configured.');
+    }
+    try {
+      const res = await instance.acquireTokenSilent({ ...agentTokenRequest, account: active });
+      return res.accessToken;
+    } catch {
+      await instance.acquireTokenRedirect({ ...agentTokenRequest, account: active });
+      return '';
+    }
+  }, [instance, account]);
+
   useEffect(() => {
     setDataverseTokenProvider(getDataverseToken);
-  }, [getDataverseToken]);
+    setAgentTokenProvider(getAgentToken);
+  }, [getDataverseToken, getAgentToken]);
 
   const value = useMemo<FpipAuth>(
-    () => ({ instance, accounts, account, inProgress, isAuthenticated, login, logout, getDataverseToken }),
-    [instance, accounts, account, inProgress, isAuthenticated, login, logout, getDataverseToken],
+    () => ({ instance, accounts, account, inProgress, isAuthenticated, login, logout, getDataverseToken, getAgentToken }),
+    [instance, accounts, account, inProgress, isAuthenticated, login, logout, getDataverseToken, getAgentToken],
   );
 
   if (inProgress !== InteractionStatus.None || signingIn) {

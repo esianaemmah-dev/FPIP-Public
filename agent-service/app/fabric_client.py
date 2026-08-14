@@ -9,8 +9,6 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-import pyodbc
-
 from app.config import Config
 
 logger = logging.getLogger(__name__)
@@ -61,6 +59,10 @@ _ALLOWED_QUERIES: dict[str, str] = {
 
 def run_fabric_query(query_name: str, params: list[Any] | None = None) -> list[dict[str, Any]]:
     """Execute an allowlisted read-only query against the Fabric SQL endpoint."""
+    try:
+        import pyodbc
+    except ImportError as exc:
+        raise RuntimeError("Fabric ODBC runtime is not installed") from exc
     if Config.FABRIC_CONNECTION_STRING is None:
         raise RuntimeError("Fabric connection string is not configured.")
 
