@@ -1,6 +1,6 @@
 # FPIP Dataverse — FPIP_Core solution (Phase 1, Task 1)
 
-This folder defines the **FPIP_Core** Dataverse solution: 11 `fpip_*` tables and
+This folder defines the **FPIP_Core** Dataverse solution: 13 `fpip_*` tables and
 6 security roles. It is the data layer for the whole platform.
 
 > The `pac` (Power Platform CLI) is **not** installed in this development
@@ -36,7 +36,7 @@ primary name attribute, columns (with type + optionset values), and lookups
 app's `src/api/types.ts` and `src/api/optionSets.ts` mirror it, and Phase 2's
 `agents_config.py` grounds against the same tables.
 
-## Tables (11)
+## Tables (13)
 
 | Table | Purpose | Key columns |
 |---|---|---|
@@ -51,6 +51,8 @@ app's `src/api/types.ts` and `src/api/optionSets.ts` mirror it, and Phase 2's
 | `fpip_approvalrequest` | Power Automate target (Phase 3) | record_type, related_record, amount, status, requested_by, waiting_since |
 | `fpip_approvalpolicy` | Configurable approval thresholds | record_type, threshold_amount, approver_upn, escalation_upn |
 | `fpip_auditlogentry` | Audit trail | timestamp, actor, actor_type (Human/AI Agent), action, entity_reference, source_detail |
+| `fpip_rfqschema` | RFQ form definitions | external_id, title, specifications, fields_json, published_at |
+| `fpip_rfqresponse` | Supplier RFQ submissions | response_reference, RFQ schema, Supplier, answers_json, files_json |
 
 ## Provisioning
 

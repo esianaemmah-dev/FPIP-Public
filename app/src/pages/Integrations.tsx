@@ -21,7 +21,7 @@ const SECTIONS: { id: string; title: string; categories: string[] }[] = [
 
 const CONFIG_FIELDS: Record<string, { label: string; placeholder: string }[]> = {
   dataverse: [{ label: 'Environment URL', placeholder: 'https://org.crm.dynamics.com' }],
-  entra: [{ label: 'Tenant ID', placeholder: 'dcb0b132-...' }],
+  entra: [{ label: 'Tenant ID', placeholder: '00000000-0000-0000-0000-000000000000' }],
   fabric: [{ label: 'SQL endpoint', placeholder: 'sqlanalytics.fabric.microsoft.com' }],
   sharepoint: [{ label: 'Site URL', placeholder: 'https://tenant.sharepoint.com/sites/fpip' }],
   'ai-search': [{ label: 'Search endpoint', placeholder: 'https://....search.windows.net' }],

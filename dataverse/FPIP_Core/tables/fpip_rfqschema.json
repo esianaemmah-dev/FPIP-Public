@@ -1,0 +1,18 @@
+{
+  "logicalName": "fpip_rfqschema",
+  "displayName": "RFQ Schema",
+  "displayCollectionName": "RFQ Schemas",
+  "description": "Versioned supplier response form definition for an RFQ.",
+  "primaryNameAttribute": "fpip_title",
+  "columns": [
+    { "name": "fpip_title", "type": "string", "displayName": "Title", "maxLength": 200, "required": true },
+    { "name": "fpip_external_id", "type": "string", "displayName": "External ID", "maxLength": 100, "required": true },
+    { "name": "fpip_specifications", "type": "string", "displayName": "Specifications", "maxLength": 4000 },
+    { "name": "fpip_fields_json", "type": "string", "displayName": "Form Fields JSON", "maxLength": 4000, "required": true },
+    { "name": "fpip_published_at", "type": "datetime", "displayName": "Published At", "format": "DateAndTime" },
+    { "name": "fpip_updated_at", "type": "datetime", "displayName": "Updated At", "format": "DateAndTime" }
+  ],
+  "lookups": [
+    { "name": "fpip_Tender", "displayName": "Tender", "targetTable": "fpip_tender", "required": false }
+  ]
+}

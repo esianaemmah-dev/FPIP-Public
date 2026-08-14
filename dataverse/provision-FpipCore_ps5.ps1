@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Provisions the FPIP_Core Dataverse solution (11 tables, optionsets, lookups)
+  Provisions the FPIP_Core Dataverse solution (13 tables, optionsets, lookups)
   from the JSON manifests in ./FPIP_Core — no `pac` CLI required.
 
 .DESCRIPTION

@@ -7,7 +7,7 @@
   require a live Azure / Power Platform / Entra tenant. Run each section in order
   after the previous one succeeds.
 
-  Prerequisites: Azure CLI logged in (`az login`), Contributor on rg-fpip-west,
+  Prerequisites: Azure CLI logged in (`az login`), Contributor on the target resource group,
   Power Platform admin rights, and Entra ID Global Administrator (or App Admin).
 
 .EXAMPLE
@@ -24,12 +24,12 @@ param(
 $ErrorActionPreference = 'Stop'
 $RepoRoot = Split-Path $PSScriptRoot -Parent
 
-$ResourceGroup = 'rg-fpip-west'
-$StaticWebApp = 'fpip-web-qjrir7ktu37ho'
-$AgentFqdn = 'fpip-agent-qjrir7ktu37ho.wonderfulglacier-e4dea04f.westus2.azurecontainerapps.io'
-$PpEnvId = 'a356101d-706d-ed3a-957f-f5f92e7fd557'
-$TenantId = 'dcb0b132-fb9e-475c-a68e-b0671222e8d8'
-$DataverseUrlDefault = 'https://org46020af7.crm4.dynamics.com'
+$ResourceGroup = $env:FPIP_RESOURCE_GROUP
+$StaticWebApp = $env:FPIP_STATIC_WEB_APP_NAME
+$AgentFqdn = $env:FPIP_AGENT_FQDN
+$PpEnvId = $env:FPIP_POWER_PLATFORM_ENVIRONMENT_ID
+$TenantId = $env:FPIP_TENANT_ID
+$DataverseUrlDefault = $env:FPIP_DATAVERSE_URL
 
 function Show-Status {
   Write-Host "`n=== FPIP deployment status ===" -ForegroundColor Cyan
@@ -52,7 +52,7 @@ function Show-Status {
   Write-Host "`n[Power Platform] FPIP Test environment"
   Write-Host "  Admin: https://admin.powerplatform.microsoft.com/environments/environment/$PpEnvId/hub"
   Write-Host "  Dataverse: $DataverseUrlDefault"
-  Write-Host "  Schema FPIP_Core: provisioned (11 tables). Configure security roles next."
+  Write-Host "  Schema FPIP_Core: provisioned from the current 13-table manifest. Configure security roles next."
 
   Write-Host "`n[Remaining manual steps]"
   Write-Host '  1. Configure 6 security roles per dataverse/FPIP_Core/roles.md'
@@ -60,7 +60,7 @@ function Show-Status {
   Write-Host '  3. Verify Supplier Portal isolation with two test supplier users'
   Write-Host '  4. Import Power Automate flows from power-automate/'
   Write-Host '  5. Fabric link, SharePoint doc management, Purview (see docs/)'
-  Write-Host '  6. Open SPA and sign in: https://nice-bush-07eb2591e.7.azurestaticapps.net'
+  Write-Host '  6. Open the deployed Static Web App URL and sign in.'
 }
 
 function Ensure-DataverseDatabase {
@@ -93,18 +93,9 @@ function Invoke-ProvisionSchema {
 
 function Invoke-DeployWeb {
   Write-Host "`n=== Step: Deploy React app to Static Web App ===" -ForegroundColor Cyan
-  Push-Location (Join-Path $RepoRoot 'app')
-  try {
-    if (-not (Test-Path 'dist/index.html')) {
-      Write-Host "Building production bundle..."
-      npm run build
-    }
-    $token = az staticwebapp secrets list -n $StaticWebApp -g $ResourceGroup --query "properties.apiKey" -o tsv
-    if (-not $token) { throw "Could not retrieve Static Web App deployment token" }
-    npx --yes @azure/static-web-apps-cli deploy ./dist --deployment-token $token --env production
-  } finally {
-    Pop-Location
-  }
+  Write-Host 'Build with: cd app; npm ci; npm run build'
+  Write-Host 'Deploy through the repository CI workflow or an approved Azure release pipeline.'
+  Write-Host 'Keep deployment tokens in the CI secret store; do not retrieve or print them from this script.'
 }
 
 switch ($Step) {

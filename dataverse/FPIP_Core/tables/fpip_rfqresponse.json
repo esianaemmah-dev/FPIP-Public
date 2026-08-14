@@ -1,0 +1,19 @@
+{
+  "logicalName": "fpip_rfqresponse",
+  "displayName": "RFQ Response",
+  "displayCollectionName": "RFQ Responses",
+  "description": "Supplier answers and SharePoint document references submitted against an RFQ schema.",
+  "primaryNameAttribute": "fpip_response_reference",
+  "columns": [
+    { "name": "fpip_response_reference", "type": "string", "displayName": "Response Reference", "maxLength": 100, "required": true },
+    { "name": "fpip_rfq_external_id", "type": "string", "displayName": "RFQ External ID", "maxLength": 100, "required": true },
+    { "name": "fpip_supplier_name", "type": "string", "displayName": "Supplier Name", "maxLength": 200, "required": true },
+    { "name": "fpip_submitted_at", "type": "datetime", "displayName": "Submitted At", "format": "DateAndTime", "required": true },
+    { "name": "fpip_answers_json", "type": "string", "displayName": "Answers JSON", "maxLength": 4000, "required": true },
+    { "name": "fpip_files_json", "type": "string", "displayName": "SharePoint Files JSON", "maxLength": 4000 }
+  ],
+  "lookups": [
+    { "name": "fpip_RfqSchema", "displayName": "RFQ Schema", "targetTable": "fpip_rfqschema", "required": true },
+    { "name": "fpip_Supplier", "displayName": "Supplier", "targetTable": "fpip_supplier", "required": true }
+  ]
+}

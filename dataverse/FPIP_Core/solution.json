@@ -2,14 +2,14 @@
   "solution": {
     "uniqueName": "FPIP_Core",
     "displayName": "FPIP Core",
-    "description": "FPIP (Finance & Procurement Intelligence Platform) core schema — 11 tables, 6 security roles. Phase 3.",
+    "description": "FPIP (Finance & Procurement Intelligence Platform) core schema — 13 tables, 6 security roles.",
     "publisher": {
       "uniqueName": "fpip",
       "displayName": "FPIP",
       "prefix": "fpip",
       "choiceOptionSetPrefix": "fpip"
     },
-    "version": "1.1.0.0"
+    "version": "1.2.0.0"
   },
   "tables": [
     { "file": "tables/fpip_supplier.json" },
@@ -22,14 +22,16 @@
     { "file": "tables/fpip_compliancedocument.json" },
     { "file": "tables/fpip_approvalrequest.json" },
     { "file": "tables/fpip_approvalpolicy.json" },
-    { "file": "tables/fpip_auditlogentry.json" }
+    { "file": "tables/fpip_auditlogentry.json" },
+    { "file": "tables/fpip_rfqschema.json" },
+    { "file": "tables/fpip_rfqresponse.json" }
   ],
   "securityRoles": [
     { "name": "FPIP Executive", "permissions": "read all fpip_* tables" },
-    { "name": "FPIP Procurement", "permissions": "read/write Requisition, Tender, Bid, PurchaseOrder; read Supplier, Contract" },
+    { "name": "FPIP Procurement", "permissions": "read/write Requisition, Tender, Bid, PurchaseOrder, RfqSchema, RfqResponse; read Supplier, Contract" },
     { "name": "FPIP Finance", "permissions": "read/write Invoice; read PurchaseOrder, Contract, Supplier" },
     { "name": "FPIP Auditor", "permissions": "read-only on all fpip_* tables, no write" },
-    { "name": "FPIP Supplier Portal User", "permissions": "read/write only own Bid, Invoice, ComplianceDocument (referenced Supplier = own); no visibility into other suppliers" },
+    { "name": "FPIP Supplier Portal User", "permissions": "read published RfqSchema; create/read/write only own Bid, Invoice, ComplianceDocument, RfqResponse (referenced Supplier = own); no visibility into other suppliers" },
     { "name": "FPIP Agent Service", "permissions": "read-only on all fpip_* tables; no create/write/delete/assign/share" }
   ]
 }

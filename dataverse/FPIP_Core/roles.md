@@ -12,7 +12,7 @@ center / Dataverse, not application code). They map to the five FPIP personas.
 ### FPIP Procurement
 - **Scope:** Organization.
 - **Permissions:**
-  - Read + Create + Write + Append: `fpip_requisition`, `fpip_tender`, `fpip_bid`, `fpip_purchaseorder`
+  - Read + Create + Write + Append: `fpip_requisition`, `fpip_tender`, `fpip_bid`, `fpip_purchaseorder`, `fpip_rfqschema`, `fpip_rfqresponse`
   - Read only: `fpip_supplier`, `fpip_contract`
 
 ### FPIP Finance
@@ -30,7 +30,8 @@ center / Dataverse, not application code). They map to the five FPIP personas.
   isolation guarantee. A Supplier Portal user must only see records where they
   are the referenced Supplier.
 - **Permissions:**
-  - Read + Create + Write: `fpip_bid`, `fpip_invoice`, `fpip_compliancedocument` — **only their own** (referenced `fpip_Supplier` = the supplier they represent)
+  - Read: published `fpip_rfqschema` records for tenders available to them
+  - Create + Read + Write: `fpip_bid`, `fpip_invoice`, `fpip_compliancedocument`, `fpip_rfqresponse` — **only their own** (referenced `fpip_Supplier` = the supplier they represent)
   - Read: `fpip_supplier` — **only their own record**
   - No visibility into other suppliers' bids, invoices, documents, or into any
     internal-only tables (requisitions, tenders, POs, contracts, approval
