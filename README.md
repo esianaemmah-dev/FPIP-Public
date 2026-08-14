@@ -17,7 +17,7 @@ Phases 1, 2, and 3:
 ## Confirmed architecture (do not deviate without flagging)
 
 - Distribution: **Azure Managed Application** — resources deploy into the customer's tenant.
-- Data layer: **Microsoft Dataverse** (solution `FPIP_Core`).
+- Data layer: **Microsoft Dataverse** (solution `FPIP_Core`, 13 tables).
 - Frontend: **custom React app** (Vite + TS), hosted on Azure Static Web Apps.
 - Auth: **Microsoft Entra ID** via MSAL.
 - Banking data: arrives via **Microsoft Fabric** only (no direct core-banking connector).
@@ -31,7 +31,7 @@ Phases 1, 2, and 3:
 app/               # React UI scaffold (Vite + React + TS, MSAL, Dataverse client)
 agent-service/     # Phase 2 — LangGraph FastAPI service
 infra/             # Managed Application package (mainTemplate / createUiDefinition / viewDefinition)
-dataverse/         # FPIP_Core solution (11 tables) + security roles + provisioning script
+dataverse/         # FPIP_Core solution (13 tables) + security roles + provisioning script
 entra/             # Entra ID app registrations (FPIP-Web-SPA, FPIP-Supplier-External, FPIP-Agent-Service)
 power-automate/    # Phase 3 — four approval flow JSON definitions
 metering-webhook/  # Phase 3 — optional Marketplace Metering webhook Azure Function
@@ -69,7 +69,7 @@ Azure Key Vault via Managed Identity.
 
 | Item | Status |
 |---|---|
-| Dataverse solution `FPIP_Core` (11 tables, 6 roles incl. agent service) defined | ✅ |
+| Dataverse solution `FPIP_Core` (13 tables, 6 roles incl. agent service) defined | ✅ |
 | Configurable `fpip_approvalpolicy` table for approval thresholds | ✅ |
 | Supplier isolation guarantee | ⚠️ Spec'd — **must be verified with a real test Supplier user** |
 | React app authenticates via MSAL | ✅ Apps registered; SPA redeployed with Entra + Dataverse env |
@@ -88,28 +88,27 @@ Azure Key Vault via Managed Identity.
 | Customer onboarding docs for Fabric and SharePoint | ✅ |
 | Marketplace Metering webhook Function App code | ✅ |
 | Managed Application package validates and deploys cleanly | ✅ Validated against `rg-fpip-west` |
-| Dataverse `FPIP_Core` provisioned into live org | ✅ `https://org46020af7.crm4.dynamics.com` |
+| Dataverse `FPIP_Core` provisioned into customer org | ⚙️ Configure per deployment |
 
 Items marked ⚠️ require a live Azure/Dataverse/Entra/Fabric environment to complete.
 The code and definitions are complete and ready for that environment.
 
 ## Finish deployment (live environment)
 
-Live IDs and URLs are in `deployment-state.json`.
+Deployment-specific IDs and URLs belong in the gitignored `deployment-state.json`.
 
-- Dataverse: `https://org46020af7.crm4.dynamics.com` — **FPIP_Core schema provisioned** (11 tables, published)
-- SPA: https://nice-bush-07eb2591e.7.azurestaticapps.net (Entra + Dataverse env baked in)
-- Agent: health OK on Container Apps
-- Entra apps: `FPIP-Web-SPA`, `FPIP-Supplier-External`, `FPIP-Agent-Service` (Dataverse `user_impersonation` granted)
+- Dataverse: `<your-dataverse-url>` — provision the current 13-table manifest
+- SPA: `<your-static-web-app-url>`
+- Agent: `<your-container-app-url>`
+- Entra apps: create `FPIP-Web-SPA`, `FPIP-Supplier-External`, and `FPIP-Agent-Service` per `entra/README.md`
 
 **Still manual in Power Platform:**
 
 1. Configure the 6 security roles per `dataverse/FPIP_Core/roles.md`
-2. Add a Dataverse **Application User** for `FPIP-Agent-Service` (`3169c03c-94a1-4335-b366-5b0c5b5b6859`) and assign **FPIP Agent Service**
+2. Add a Dataverse **Application User** for your `FPIP-Agent-Service` client ID and assign **FPIP Agent Service**
 3. Sign in to the SPA and create a test requisition
 4. Import Power Automate flows; then Fabric / SharePoint / Purview per `docs/`
 
 ```powershell
 .\scripts\finish-deployment.ps1
 ```
-

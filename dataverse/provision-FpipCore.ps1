@@ -1,13 +1,13 @@
 #requires -Version 7
 <#
 .SYNOPSIS
-  Provisions the FPIP_Core Dataverse solution (10 tables, optionsets, lookups)
+  Provisions the FPIP_Core Dataverse solution (13 tables, optionsets, lookups)
   from the JSON manifests in ./FPIP_Core — no `pac` CLI required.
 
 .DESCRIPTION
   Uses the Dataverse Web API (metadata endpoints: EntityDefinitions,
   RelationshipDefinitions, publishers, solutions) to create the FPIP publisher,
-  the FPIP_Core solution, all 10 fpip_* tables, their columns (string, money,
+  the FPIP_Core solution, all 13 fpip_* tables, their columns (string, money,
   decimal, whole, datetime, boolean, choice, autonumber, url) and their lookup
   relationships.
 

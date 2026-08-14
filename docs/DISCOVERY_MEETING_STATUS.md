@@ -45,6 +45,6 @@ Mapped from the 11 Jul 2026 discovery notes. Demo with `?demo=1` or role picker.
 - [x] Entra group script includes HOD / Budget Owner / Contract Manager (re-run script to provision)
 - [ ] Real Azure Document Intelligence keys
 - [ ] Live SharePoint Graph watcher
-- [ ] Dataverse tables for RFQ schema / responses
+- [x] Dataverse tables + React persistence adapter for RFQ schema / responses (provision in target tenant)
 - [ ] Provision Entra groups in tenant (`.\entra\create-FpipSecurityGroups.ps1`)
 - [ ] Re-enable MSAL when authenticator available (`VITE_USE_DEMO_DATA=false`, `VITE_DISABLE_MS_AUTH=false`)

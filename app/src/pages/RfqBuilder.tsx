@@ -6,6 +6,7 @@ import { useToast } from '@/context/ToastContext';
 import { useNotifications } from '@/context/NotificationContext';
 import { Icon } from '@/components/Icons';
 import { useCreateTender, useCreateBid } from '@/api/useDataverse';
+import { isDemoMode } from '@/api/dataverseClient';
 import {
   listRfqResponses,
   listRfqSchemas,
@@ -46,23 +47,37 @@ export function RfqBuilder() {
   const { submit: createBidRow } = useCreateBid();
   const [rfqId] = useState(DEFAULT_ID);
   const [fields, setFields] = useState<StoredRfqField[]>(STARTER);
-  const [title, setTitle] = useState('RFQ · Network Hardware Refresh');
+  const [title, setTitle] = useState('RFQ · Example Equipment Procurement');
   const [specs, setSpecs] = useState(
-    'Supply and install core switches per attached BOM. Include warranty, SLA, and training.',
+    'Provide the example equipment in the attached schedule. Include warranty, delivery, and training details.',
   );
-  const [responses, setResponses] = useState(listRfqResponses(DEFAULT_ID));
+  const [responses, setResponses] = useState<Awaited<ReturnType<typeof listRfqResponses>>>([]);
+  const [loadingRfq, setLoadingRfq] = useState(true);
 
   useEffect(() => {
-    const existing = listRfqSchemas().find((s) => s.id === DEFAULT_ID);
-    if (existing) {
-      setTitle(existing.title);
-      setSpecs(existing.specs);
-      setFields(existing.fields);
-    }
-  }, []);
+    let active = true;
+    void Promise.all([listRfqSchemas(), listRfqResponses(DEFAULT_ID)])
+      .then(([schemas, savedResponses]) => {
+        if (!active) return;
+        const existing = schemas.find((s) => s.id === DEFAULT_ID);
+        if (existing) {
+          setTitle(existing.title);
+          setSpecs(existing.specs);
+          setFields(existing.fields);
+        }
+        setResponses(savedResponses);
+      })
+      .catch((err) => showToast(err instanceof Error ? err.message : 'Could not load RFQ data'))
+      .finally(() => {
+        if (active) setLoadingRfq(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [showToast]);
 
-  function persist(extra?: { publishedAt?: string }) {
-    saveRfqSchema({
+  async function persist(extra?: { publishedAt?: string }) {
+    return saveRfqSchema({
       id: rfqId,
       title,
       specs,
@@ -88,22 +103,26 @@ export function RfqBuilder() {
     setFields((rows) => rows.filter((f) => f.id !== id));
   }
 
-  function saveDraft() {
-    persist();
-    showToast('RFQ schema saved locally (browser) — ready for Dataverse later');
+  async function saveDraft() {
+    try {
+      await persist();
+      showToast('RFQ schema saved');
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Could not save RFQ schema');
+    }
   }
 
   async function publish() {
     const publishedAt = new Date().toISOString();
-    persist({ publishedAt });
     try {
+      await persist({ publishedAt });
       const tender = await publishTender({
         title,
         category: 'ICT & Software',
         status: 'Open',
         draftBody: specs,
         format: 'RFQ',
-        invitees: ['Kestrel Components Ltd.', 'Halyard Systems'],
+        invitees: ['Example Supplier A', 'Example Supplier B'],
       });
       push({
         kind: 'tender',
@@ -127,30 +146,31 @@ export function RfqBuilder() {
     const resp = {
       id: `resp${Math.random().toString(36).slice(2, 8)}`,
       rfqId,
-      supplierName: 'Kestrel Components Ltd.',
+      supplierName: 'Example Supplier A',
       submittedAt: new Date().toISOString(),
       answers: {
-        f1: 'Kestrel Components Ltd.',
-        f3: '518000',
+        f1: 'Example Supplier A',
+        f3: '100000',
         f4: '2026-09-15',
       },
-      files: ['Technical_proposal.pdf', 'Pricing.xlsx', 'Tax_cert.pdf'],
+      files: ['Example_proposal.pdf', 'Example_pricing.xlsx', 'Example_certificate.pdf'],
     };
-    saveRfqResponse(resp);
-    setResponses(listRfqResponses(rfqId));
     try {
-      const schemas = listRfqSchemas();
+      await saveRfqResponse({ ...resp, supplierId: 's2' });
+      setResponses(await listRfqResponses(rfqId));
+      const schemas = await listRfqSchemas();
       const published = schemas.find((s) => s.id === rfqId);
       await createBidRow({
         tenderId: 't2',
         tenderTitle: published?.title ?? title,
         supplierId: 's2',
-        supplierName: 'Kestrel Components Ltd.',
-        offerAmount: 518000,
+        supplierName: 'Example Supplier A',
+        offerAmount: 100000,
         notes: 'Simulated RFQ apply with document uploads',
       });
-    } catch {
-      /* bid board optional if tender missing */
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : 'Could not save supplier response');
+      return;
     }
     showToast('Sample supplier response saved — bid board updated');
   }
@@ -163,15 +183,15 @@ export function RfqBuilder() {
             <div className="eyebrow">{entity.name} · RFQ builder</div>
             <h1>RFQ form builder</h1>
             <p>
-              Google Forms–style builder with local persistence. Publish notifies suppliers; responses
-              (including uploads) are stored for procurement review.
+              Google Forms–style builder backed by Dataverse in production and local storage in demo mode.
+              Publish notifies suppliers; responses and document references remain available for review.
             </p>
           </div>
           <div className="action-row">
             <button type="button" className="btn btn-ghost btn-sm" onClick={() => navigate('/procurement')}>
               Back to Procurement
             </button>
-            <button type="button" className="btn btn-ghost btn-sm" onClick={saveDraft}>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={() => void saveDraft()}>
               Save schema
             </button>
             <button type="button" className="btn btn-primary btn-sm" onClick={() => void publish()}>
@@ -235,12 +255,16 @@ export function RfqBuilder() {
         <SectionHead
           title={`Supplier responses · ${responses.length}`}
           action={
-            <button type="button" className="btn btn-ghost btn-sm" onClick={() => void simulateSupplierResponse()}>
-              Simulate supplier apply
-            </button>
+            isDemoMode ? (
+              <button type="button" className="btn btn-ghost btn-sm" onClick={() => void simulateSupplierResponse()}>
+                Simulate supplier apply
+              </button>
+            ) : undefined
           }
         />
-        {responses.length === 0 ? (
+        {loadingRfq ? (
+          <p style={{ color: 'var(--ink-faint)', fontSize: 13 }}>Loading RFQ responses…</p>
+        ) : responses.length === 0 ? (
           <p style={{ color: 'var(--ink-faint)', fontSize: 13 }}>No responses yet — publish then collect uploads.</p>
         ) : (
           <div className="sod-grid">

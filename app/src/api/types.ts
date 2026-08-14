@@ -142,6 +142,29 @@ export interface FpipAuditLogEntry {
   fpip_source_detail?: string;
 }
 
+export interface FpipRfqSchema {
+  fpip_rfqschemaid: string;
+  fpip_title: string;
+  fpip_external_id: string;
+  fpip_specifications?: string;
+  fpip_fields_json: string;
+  fpip_published_at?: string;
+  fpip_updated_at?: string;
+  fpip_Tender?: LookupRef;
+}
+
+export interface FpipRfqResponse {
+  fpip_rfqresponseid: string;
+  fpip_response_reference: string;
+  fpip_rfq_external_id: string;
+  fpip_supplier_name: string;
+  fpip_submitted_at: string;
+  fpip_answers_json: string;
+  fpip_files_json?: string;
+  fpip_RfqSchema?: LookupRef;
+  fpip_Supplier?: LookupRef;
+}
+
 /** Logical collection name for each table. */
 export const Tables = {
   supplier: 'fpip_suppliers',
@@ -155,6 +178,8 @@ export const Tables = {
   approvalRequest: 'fpip_approvalrequests',
   approvalPolicy: 'fpip_approvalpolicies',
   auditLogEntry: 'fpip_auditlogentries',
+  rfqSchema: 'fpip_rfqschemas',
+  rfqResponse: 'fpip_rfqresponses',
 } as const;
 
 export type TableName = (typeof Tables)[keyof typeof Tables];
