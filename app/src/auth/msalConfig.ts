@@ -20,6 +20,7 @@ function resolveDataverseScope(): string {
 }
 
 export const dataverseScope = resolveDataverseScope();
+export const agentApiScope = import.meta.env.VITE_AGENT_API_SCOPE ?? '';
 
 export const msalConfig: Configuration = {
   auth: {
@@ -35,8 +36,9 @@ export const msalConfig: Configuration = {
 };
 
 // Request the Dataverse scope up front so consent happens at login.
-export const loginRequest = { scopes: [dataverseScope] };
+export const loginRequest = { scopes: [dataverseScope, agentApiScope].filter(Boolean) };
 export const dataverseTokenRequest = { scopes: [dataverseScope] };
+export const agentTokenRequest = { scopes: agentApiScope ? [agentApiScope] : [] };
 
 /** True when the required Entra ID configuration is present. The app shows a
  *  setup screen instead of attempting MSAL init when this is false. */

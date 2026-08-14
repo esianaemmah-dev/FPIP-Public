@@ -289,7 +289,7 @@ export function routeAssistantIntent(message: string): string {
   if (/(invoice|payment|budget|cash|3-way|duplicate)/.test(m)) return 'finance';
   if (/(tender|bid|rfp|rfq|requisition|sourc|award|supplier score)/.test(m)) return 'procurement';
   if (/(contract|renewal|clause|obligation)/.test(m)) return 'contract';
-  if (/(compliance|policy|audit|sod|purview)/.test(m)) return 'compliance';
+  if (/(compliance|policy|audit|sod|segregation of duties|purview)/.test(m)) return 'compliance';
   if (/(risk|concentrat|exposure)/.test(m)) return 'risk';
   if (/(spend|saving|categor)/.test(m)) return 'spend';
   if (/(onboard|my bid|my invoice|tax cert)/.test(m)) return 'supplier';
@@ -311,7 +311,7 @@ export const INTEGRATIONS: IntegrationDef[] = [
     id: 'dataverse',
     name: 'Microsoft Dataverse',
     category: 'Data',
-    status: 'Connected',
+    status: 'Available',
     description: 'FPIP_Core tables, security roles, and approval policies.',
     owner: 'Platform Admin',
   },
@@ -319,7 +319,7 @@ export const INTEGRATIONS: IntegrationDef[] = [
     id: 'entra',
     name: 'Microsoft Entra ID',
     category: 'Identity',
-    status: 'Connected',
+    status: 'Available',
     description: 'Staff SPA, supplier external app, and agent service principal.',
     owner: 'Platform Admin',
   },
@@ -327,7 +327,7 @@ export const INTEGRATIONS: IntegrationDef[] = [
     id: 'fabric',
     name: 'Microsoft Fabric',
     category: 'Banking data',
-    status: 'Configured',
+    status: 'Available',
     description: 'OneLake / SQL analytics for payments and budget utilization.',
     owner: 'Finance + IT',
   },
@@ -335,7 +335,7 @@ export const INTEGRATIONS: IntegrationDef[] = [
     id: 'sharepoint',
     name: 'SharePoint / OneDrive',
     category: 'Documents',
-    status: 'Configured',
+    status: 'Available',
     description: 'Compliance docs, contracts, and AI Search grounding indexes.',
     owner: 'Procurement',
   },
@@ -351,7 +351,7 @@ export const INTEGRATIONS: IntegrationDef[] = [
     id: 'openai',
     name: 'Azure OpenAI',
     category: 'AI',
-    status: 'Connected',
+    status: 'Available',
     description: 'LLM backend for the unified FPIP Assistant (LangGraph service).',
     owner: 'Platform Admin',
   },
@@ -359,7 +359,7 @@ export const INTEGRATIONS: IntegrationDef[] = [
     id: 'power-automate',
     name: 'Power Automate',
     category: 'Workflow',
-    status: 'Configured',
+    status: 'Available',
     description: 'Requisition, tender award, invoice exception, and renewal flows.',
     owner: 'Procurement + Finance',
   },

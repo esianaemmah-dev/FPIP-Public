@@ -94,3 +94,9 @@ a {
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+/* Fail-closed startup message; detailed errors remain in controlled telemetry. */
+.load-failure {
+  padding: 32px;
+  font-family: system-ui, sans-serif;
+  color: #b91c1c;
+}

@@ -3,8 +3,15 @@
 // Falls back to local replies only when the live agent is unreachable.
 
 import { streamDemoAssistant } from '@/api/demoAssistant';
+import { isDemoMode } from '@/api/dataverseClient';
 
 const BASE_URL = import.meta.env.VITE_AGENT_SERVICE_URL || 'http://localhost:8000';
+type TokenProvider = () => Promise<string>;
+let tokenProvider: TokenProvider | null = null;
+
+export function setAgentTokenProvider(provider: TokenProvider): void {
+  tokenProvider = provider;
+}
 
 export interface UserContext {
   username?: string;
@@ -48,7 +55,6 @@ export async function invokeAgentStream({
   agentId,
   message,
   threadId,
-  userContext,
   onToken,
   onError,
   onDone,
@@ -58,26 +64,29 @@ export async function invokeAgentStream({
 
   let response: Response;
   try {
+    const accessToken = tokenProvider ? await tokenProvider() : '';
+    if (!isDemoMode && !accessToken) throw new Error('Agent API authentication is not configured.');
     response = await fetch(`${BASE_URL}/agents/${encodeURIComponent(agentId)}/invoke`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Accept: 'text/event-stream',
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
       body: JSON.stringify({
         message,
         thread_id: threadId,
-        user_context: userContext ?? {},
       }),
     });
   } catch (err: unknown) {
-    await runDemoFallback(message, threadId, onToken, onDone, onError);
+    if (isDemoMode) await runDemoFallback(message, threadId, onToken, onDone, onError);
+    else onError(err instanceof Error ? err.message : 'Agent service unavailable');
     return;
   }
 
   if (!response.ok) {
     const text = await response.text().catch(() => 'Agent service error');
-    if (isOpenAiConfigError(text)) {
+    if (isDemoMode && isOpenAiConfigError(text)) {
       await runDemoFallback(message, threadId, onToken, onDone, onError);
       return;
     }
@@ -134,7 +143,7 @@ export async function invokeAgentStream({
           return;
         } else if (e.type === 'error') {
           const errMsg = e.message ?? 'Unknown agent error';
-          if (!receivedToken && isOpenAiConfigError(errMsg)) {
+          if (isDemoMode && !receivedToken && isOpenAiConfigError(errMsg)) {
             await runDemoFallback(message, threadId || currentThreadId, onToken, onDone, onError);
             return;
           }
@@ -146,7 +155,7 @@ export async function invokeAgentStream({
 
     onDone(currentThreadId);
   } catch (err: unknown) {
-    if (!receivedToken) {
+    if (isDemoMode && !receivedToken) {
       await runDemoFallback(message, threadId, onToken, onDone, onError);
       return;
     }
