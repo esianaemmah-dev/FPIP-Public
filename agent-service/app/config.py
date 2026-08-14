@@ -7,6 +7,7 @@ agent-service/.env (never commit .env).
 from __future__ import annotations
 
 import os
+import json
 from typing import Any
 
 from azure.identity import DefaultAzureCredential
@@ -89,12 +90,20 @@ class Config:
     COSMOS_DB_DATABASE: str = os.getenv("COSMOS_DB_DATABASE", "fpip-agent-checkpoints")
 
     # FastAPI
+    APP_ENV: str = os.getenv("APP_ENV", "development").lower()
     PORT: int = int(os.getenv("PORT", "8000"))
     CORS_ORIGINS: list[str] = [
         origin.strip()
         for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
         if origin.strip()
     ]
+    AGENT_API_TENANT_ID: str = os.getenv("AGENT_API_TENANT_ID", "")
+    AGENT_API_AUDIENCE: str = os.getenv("AGENT_API_AUDIENCE", "")
+    SUPPLIER_ID_CLAIM: str = os.getenv("SUPPLIER_ID_CLAIM", "extension_supplierId")
+    try:
+        ENTRA_GROUP_ROLE_MAP: dict[str, str] = json.loads(os.getenv("ENTRA_GROUP_ROLE_MAP", "{}"))
+    except json.JSONDecodeError:
+        ENTRA_GROUP_ROLE_MAP = {}
 
     @classmethod
     def as_dict(cls) -> dict[str, Any]:
@@ -115,6 +124,8 @@ class Config:
             "AZURE_OPENAI_ENDPOINT": cls.AZURE_OPENAI_ENDPOINT,
             "AZURE_OPENAI_DEPLOYMENT": cls.AZURE_OPENAI_DEPLOYMENT,
             "AZURE_SEARCH_ENDPOINT": cls.AZURE_SEARCH_ENDPOINT,
+            "AGENT_API_TENANT_ID": cls.AGENT_API_TENANT_ID,
+            "AGENT_API_AUDIENCE": cls.AGENT_API_AUDIENCE,
         }
         missing = [k for k, v in required.items() if not v]
         if missing:

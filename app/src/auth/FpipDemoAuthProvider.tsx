@@ -26,6 +26,7 @@ export function FpipDemoAuthProvider({ children }: { children: ReactNode }) {
       login: async () => {},
       logout: async () => {},
       getDataverseToken: async () => '',
+      getAgentToken: async () => '',
     }),
     [],
   );

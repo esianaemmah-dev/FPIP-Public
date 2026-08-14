@@ -65,6 +65,10 @@ uvicorn app.api:app --reload    # http://localhost:8000/docs
 In production the service runs in Azure Container Apps and loads all secrets from
 Azure Key Vault via Managed Identity.
 
+Security controls and the customer evidence required for production approval are
+defined in [`SECURITY.md`](SECURITY.md) and
+[`docs/PRODUCTION_READINESS.md`](docs/PRODUCTION_READINESS.md).
+
 ## Phase 1 / 2 / 3 acceptance status
 
 | Item | Status |
@@ -77,6 +81,9 @@ Azure Key Vault via Managed Identity.
 | Requisition created in UI persists in Dataverse | ⚠️ Ready to verify after roles |
 | 9 agents defined as config entries in one `agents_config.py` | ✅ |
 | Each agent has scoped tools/grounding indexes | ✅ |
+| Agent API validates Entra JWTs and derives role/supplier context server-side | ✅ Placeholder IDs required per tenant |
+| Per-role agent gates and per-agent Dataverse table allowlists | ✅ |
+| Supplier AI Search and Dataverse queries are self-scoped | ✅ Needs two-user tenant proof |
 | Read-only constraint in every system prompt | ✅ |
 | Dataverse + Fabric SQL + Azure AI Search tools | ✅ (needs live resources) |
 | FastAPI service streams responses via SSE | ✅ |
@@ -84,11 +91,12 @@ Azure Key Vault via Managed Identity.
 | React Copilot page and dashboard chat call the agent service | ✅ |
 | Power Automate flow JSON definitions (4 flows) | ✅ |
 | Governance page reads real `fpip_auditlogentry` and shows approval policies | ✅ |
-| ARM templates finalized with real agent container + optional metering webhook | ✅ |
+| ARM templates include authenticated agent settings, probes and 2–10 replica scaling | ✅ Placeholder IDs required per tenant |
 | Customer onboarding docs for Fabric and SharePoint | ✅ |
 | Marketplace Metering webhook Function App code | ✅ |
 | Managed Application package validates and deploys cleanly | ✅ Validated against `rg-fpip-west` |
 | Dataverse `FPIP_Core` provisioned into customer org | ⚙️ Configure per deployment |
+| Automated frontend, backend, manifest and dependency quality gates | ✅ |
 
 Items marked ⚠️ require a live Azure/Dataverse/Entra/Fabric environment to complete.
 The code and definitions are complete and ready for that environment.

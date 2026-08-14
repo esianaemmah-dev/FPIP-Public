@@ -44,13 +44,19 @@ def _search_client(index_name: str) -> SearchClient:
     )
 
 
-def search_documents(index_name: str, query: str, top_k: int = 5) -> list[dict[str, Any]]:
+def search_documents(
+    index_name: str,
+    query: str,
+    top_k: int = 5,
+    filter_expression: str | None = None,
+) -> list[dict[str, Any]]:
     """Search an Azure AI Search index and return a compact result list."""
     client = _search_client(index_name)
     try:
         results = client.search(
             search_text=query,
-            top=top_k,
+            top=max(1, min(top_k, 10)),
+            filter=filter_expression,
             select=["id", "title", "content", "source_path"],
         )
         return [

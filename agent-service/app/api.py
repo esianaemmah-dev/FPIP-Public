@@ -12,14 +12,15 @@ import re
 import uuid
 from typing import Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from langchain_core.messages import AIMessageChunk, HumanMessage
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 from app.agents_config import AGENTS_BY_ID, get_agent_config
 from app.graph import create_agent_graph
+from app.security import Principal, authorize_agent, internal_thread_id, require_principal
 from app.tools import USER_CONTEXT
 
 logger = logging.getLogger(__name__)
@@ -32,15 +33,15 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=Config.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Request-ID"],
 )
 
 
 class InvokeRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     message: str = Field(..., min_length=1, max_length=4000)
-    thread_id: str | None = None
-    user_context: dict[str, Any] = Field(default_factory=dict)
+    thread_id: str | None = Field(default=None, min_length=1, max_length=160)
 
 
 class MessageOut(BaseModel):
@@ -50,6 +51,18 @@ class MessageOut(BaseModel):
 
 def _serialize_sse(payload: dict[str, Any]) -> str:
     return f"data: {json.dumps(payload)}\n\n"
+
+
+@app.middleware("http")
+async def security_headers(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
+    response = await call_next(request)
+    response.headers["X-Request-ID"] = request_id
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+    return response
 
 
 _FPIP_HINTS = re.compile(
@@ -86,8 +99,21 @@ async def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/ready")
+async def ready() -> dict[str, Any]:
+    checks = {
+        "dataverse": bool(Config.DATAVERSE_URL and Config.DATAVERSE_CLIENT_ID),
+        "openai": bool(Config.AZURE_OPENAI_ENDPOINT and Config.AZURE_OPENAI_DEPLOYMENT),
+        "search": bool(Config.AZURE_SEARCH_ENDPOINT),
+        "authentication": bool(Config.AGENT_API_AUDIENCE and Config.AGENT_API_TENANT_ID),
+    }
+    if Config.APP_ENV == "production" and not all(checks.values()):
+        raise HTTPException(status_code=503, detail={"status": "not_ready", "checks": checks})
+    return {"status": "ready" if all(checks.values()) else "degraded", "checks": checks}
+
+
 @app.get("/agents")
-async def list_agents() -> list[dict[str, Any]]:
+async def list_agents(principal: Principal = Depends(require_principal)) -> list[dict[str, Any]]:
     return [
         {
             "id": a.agent_id,
@@ -96,29 +122,39 @@ async def list_agents() -> list[dict[str, Any]]:
             "grounding_indexes": list(a.grounding_indexes),
         }
         for a in AGENTS_BY_ID.values()
+        if _can_access_agent(principal, a.agent_id)
     ]
 
 
+def _can_access_agent(principal: Principal, agent_id: str) -> bool:
+    try:
+        authorize_agent(principal, agent_id)
+        return True
+    except HTTPException:
+        return False
+
+
 @app.post("/agents/{agent_id}/invoke")
-async def invoke_agent(agent_id: str, request: InvokeRequest) -> StreamingResponse:
+async def invoke_agent(
+    agent_id: str,
+    request: InvokeRequest,
+    principal: Principal = Depends(require_principal),
+) -> StreamingResponse:
     try:
         get_agent_config(agent_id)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+    authorize_agent(principal, agent_id)
 
     thread_id = request.thread_id or str(uuid.uuid4())
-    token = USER_CONTEXT.set(request.user_context)
-
+    graph_thread_id = internal_thread_id(principal, thread_id)
     if _is_off_topic(request.message):
 
         async def refuse_stream():
-            try:
-                yield _serialize_sse(
-                    {"type": "token", "thread_id": thread_id, "content": _OFFTOPIC_REPLY}
-                )
-                yield _serialize_sse({"type": "done", "thread_id": thread_id})
-            finally:
-                USER_CONTEXT.reset(token)
+            yield _serialize_sse(
+                {"type": "token", "thread_id": thread_id, "content": _OFFTOPIC_REPLY}
+            )
+            yield _serialize_sse({"type": "done", "thread_id": thread_id})
 
         return StreamingResponse(
             refuse_stream(),
@@ -131,9 +167,10 @@ async def invoke_agent(agent_id: str, request: InvokeRequest) -> StreamingRespon
         )
 
     async def event_stream():
+        token = USER_CONTEXT.set({**principal.tool_context(), "agent_id": agent_id})
         try:
             graph = create_agent_graph(agent_id)
-            config = {"configurable": {"thread_id": thread_id}}
+            config = {"configurable": {"thread_id": graph_thread_id}}
             input_state = {"messages": [HumanMessage(content=request.message)]}
 
             async for chunk, metadata in graph.astream(
@@ -149,9 +186,12 @@ async def invoke_agent(agent_id: str, request: InvokeRequest) -> StreamingRespon
                     )
 
             yield _serialize_sse({"type": "done", "thread_id": thread_id})
-        except Exception as exc:
-            logger.exception("Agent invocation failed")
-            yield _serialize_sse({"type": "error", "thread_id": thread_id, "message": str(exc)})
+        except Exception:
+            error_id = str(uuid.uuid4())
+            logger.exception("Agent invocation failed error_id=%s", error_id)
+            yield _serialize_sse(
+                {"type": "error", "thread_id": thread_id, "message": "Agent request failed", "error_id": error_id}
+            )
         finally:
             USER_CONTEXT.reset(token)
 
@@ -167,13 +207,26 @@ async def invoke_agent(agent_id: str, request: InvokeRequest) -> StreamingRespon
 
 
 @app.get("/agents/{agent_id}/history/{thread_id}")
-async def get_history(agent_id: str, thread_id: str) -> list[MessageOut]:
+async def get_history(
+    agent_id: str,
+    thread_id: str,
+    principal: Principal = Depends(require_principal),
+) -> list[MessageOut]:
+    try:
+        get_agent_config(agent_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+    authorize_agent(principal, agent_id)
     try:
         graph = create_agent_graph(agent_id)
-        config = {"configurable": {"thread_id": thread_id}}
+        config = {"configurable": {"thread_id": internal_thread_id(principal, thread_id)}}
         snapshot = graph.get_state(config)
+    except HTTPException:
+        raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        error_id = str(uuid.uuid4())
+        logger.exception("History lookup failed error_id=%s", error_id)
+        raise HTTPException(status_code=500, detail={"message": "History lookup failed", "error_id": error_id}) from exc
 
     messages = []
     if snapshot and snapshot.values and isinstance(snapshot.values.get("messages"), list):

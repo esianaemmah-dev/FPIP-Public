@@ -95,6 +95,20 @@
                 "toolTip": "Override only if you are deploying a custom-built agent-service image."
               },
               {
+                "name": "repositoryUrl",
+                "type": "Microsoft.Common.TextBox",
+                "label": "FPIP source repository URL",
+                "defaultValue": "https://github.com/<your-org>/FPIP-Public.git",
+                "toolTip": "Repository approved for the customer's Static Web App deployment."
+              },
+              {
+                "name": "agentApiAudience",
+                "type": "Microsoft.Common.TextBox",
+                "label": "Agent API Entra application ID URI",
+                "defaultValue": "api://<agent-service-client-id>",
+                "toolTip": "Audience configured on the FPIP-Agent-Service app registration."
+              },
+              {
                 "name": "deployMeteringWebhook",
                 "type": "Microsoft.Common.CheckBox",
                 "label": "Deploy Marketplace metering webhook",
@@ -115,6 +129,8 @@
     "staticWebAppSku": "[steps('installBlade').plan.staticWebAppSku]",
     "publisherTenantId": "[tenant().tenantId]",
     "agentContainerImage": "[steps('installBlade').advanced.agentContainerImage]",
+    "repositoryUrl": "[steps('installBlade').advanced.repositoryUrl]",
+    "agentApiAudience": "[steps('installBlade').advanced.agentApiAudience]",
     "deployMeteringWebhook": "[steps('installBlade').advanced.deployMeteringWebhook]"
   }
 }

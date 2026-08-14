@@ -14,6 +14,7 @@ export interface FpipAuth {
   login: () => Promise<void>;
   logout: () => Promise<void>;
   getDataverseToken: () => Promise<string>;
+  getAgentToken: () => Promise<string>;
 }
 
 const AuthContext = createContext<FpipAuth | null>(null);

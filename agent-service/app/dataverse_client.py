@@ -7,8 +7,8 @@ solely on the service principal's broader Dataverse security role.
 """
 from __future__ import annotations
 
-import json
 import logging
+import re
 from typing import Any
 
 import msal
@@ -40,6 +40,19 @@ _SUPPLIER_LOOKUP_TABLES = {
     "fpip_contract",
     "fpip_purchaseorder",
 }
+
+_AGENT_TABLES: dict[str, set[str]] = {
+    "executive": set(_ENTITY_SETS),
+    "procurement": {"fpip_supplier", "fpip_requisition", "fpip_tender", "fpip_bid", "fpip_purchaseorder", "fpip_contract"},
+    "finance": {"fpip_invoice", "fpip_purchaseorder", "fpip_contract", "fpip_requisition", "fpip_supplier"},
+    "spend": {"fpip_requisition", "fpip_purchaseorder", "fpip_invoice", "fpip_supplier"},
+    "contract": {"fpip_contract", "fpip_supplier", "fpip_purchaseorder"},
+    "compliance": {"fpip_compliancedocument", "fpip_supplier", "fpip_approvalrequest", "fpip_auditlogentry"},
+    "risk": {"fpip_supplier", "fpip_contract", "fpip_bid", "fpip_invoice"},
+    "knowledge": {"fpip_requisition", "fpip_tender", "fpip_contract", "fpip_auditlogentry"},
+    "supplier": {"fpip_supplier", "fpip_bid", "fpip_invoice", "fpip_compliancedocument"},
+}
+_GUID = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
 
 
 class DataverseClient:
@@ -75,19 +88,32 @@ class DataverseClient:
                 f"Unknown table '{table}'. Valid tables: {list(_ENTITY_SETS)}"
             )
 
+        user_context = user_context or {}
+        agent_id = str(user_context.get("agent_id") or "")
+        if table not in _AGENT_TABLES.get(agent_id, set()):
+            raise PermissionError(f"Agent '{agent_id}' cannot query table '{table}'")
+
         entity_set = _ENTITY_SETS[table]
         url = f"{self.base_url}/api/data/v9.2/{entity_set}"
-        params: dict[str, Any] = {"$top": top}
+        params: dict[str, Any] = {"$top": max(1, min(int(top), 50))}
         if select:
             params["$select"] = select
 
         effective_filter = filter_expression or ""
 
-        # Supplier isolation: the React app passes role='supplier' and supplier_id.
-        user_context = user_context or {}
-        if user_context.get("role") == "supplier" and table in _SUPPLIER_LOOKUP_TABLES:
+        # Supplier isolation: role and supplier_id come only from verified Entra claims.
+        if user_context.get("role") == "supplier":
             supplier_id = user_context.get("supplier_id")
-            if supplier_id:
+            if not isinstance(supplier_id, str) or not _GUID.fullmatch(supplier_id):
+                raise PermissionError("A valid supplier identity is required")
+            if table == "fpip_supplier":
+                supplier_filter = f"fpip_supplierid eq {supplier_id}"
+                effective_filter = (
+                    f"({effective_filter}) and {supplier_filter}"
+                    if effective_filter
+                    else supplier_filter
+                )
+            elif table in _SUPPLIER_LOOKUP_TABLES:
                 supplier_filter = f"_fpip_supplier_value eq {supplier_id}"
                 effective_filter = (
                     f"({effective_filter}) and {supplier_filter}"

@@ -11,6 +11,9 @@ venv/
 
 # Local secrets (never commit)
 .env
+.coverage
+.pytest_cache/
+htmlcov/
 
 # azd
 .azdo/

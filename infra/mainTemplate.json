@@ -46,6 +46,20 @@
       "type": "string",
       "defaultValue": "ghcr.io/fpip/agent-service:latest"
     },
+    "repositoryUrl": {
+      "type": "string",
+      "defaultValue": "https://github.com/<your-org>/FPIP-Public.git",
+      "metadata": {
+        "description": "Customer-approved source repository for Static Web Apps deployment."
+      }
+    },
+    "agentApiAudience": {
+      "type": "string",
+      "defaultValue": "api://<agent-service-client-id>",
+      "metadata": {
+        "description": "Entra application ID URI accepted by the FPIP Agent Service."
+      }
+    },
     "deployMeteringWebhook": {
       "type": "bool",
       "defaultValue": false
@@ -127,7 +141,7 @@
         "name": "[parameters('staticWebAppSku')]"
       },
       "properties": {
-        "repositoryUrl": "https://github.com/oticgroup/fpip.git",
+        "repositoryUrl": "[parameters('repositoryUrl')]",
         "branch": "main",
         "buildProperties": {
           "appLocation": "/app",
@@ -193,23 +207,64 @@
                 {
                   "name": "PORT",
                   "value": "8000"
+                },
+                {
+                  "name": "APP_ENV",
+                  "value": "production"
+                },
+                {
+                  "name": "AUTH_DISABLED",
+                  "value": "false"
+                },
+                {
+                  "name": "AGENT_API_TENANT_ID",
+                  "value": "[parameters('publisherTenantId')]"
+                },
+                {
+                  "name": "AGENT_API_AUDIENCE",
+                  "value": "[parameters('agentApiAudience')]"
+                },
+                {
+                  "name": "CORS_ORIGINS",
+                  "value": "[concat('https://', reference(resourceId('Microsoft.Web/staticSites', variables('staticWebAppName'))).defaultHostname)]"
                 }
               ],
               "resources": {
                 "cpu": 1,
                 "memory": "2Gi"
-              }
+              },
+              "probes": [
+                {
+                  "type": "Liveness",
+                  "httpGet": { "path": "/health", "port": 8000 },
+                  "initialDelaySeconds": 10,
+                  "periodSeconds": 30
+                },
+                {
+                  "type": "Readiness",
+                  "httpGet": { "path": "/ready", "port": 8000 },
+                  "initialDelaySeconds": 15,
+                  "periodSeconds": 15
+                }
+              ]
             }
           ],
           "scale": {
-            "minReplicas": 1,
-            "maxReplicas": 5
+            "minReplicas": 2,
+            "maxReplicas": 10,
+            "rules": [
+              {
+                "name": "http-concurrency",
+                "http": { "metadata": { "concurrentRequests": "50" } }
+              }
+            ]
           }
         }
       },
       "dependsOn": [
         "[resourceId('Microsoft.App/managedEnvironments', variables('containerEnvName'))]",
-        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]"
+        "[resourceId('Microsoft.KeyVault/vaults', variables('keyVaultName'))]",
+        "[resourceId('Microsoft.Web/staticSites', variables('staticWebAppName'))]"
       ]
     },
     {
