@@ -1,0 +1,136 @@
+﻿openapi: 3.1.0
+info:
+  title: FPIP Enterprise Controls API
+  version: 2.1.0
+  description: Authenticated decision APIs. Milestone authorization never executes a payment.
+servers:
+  - url: https://api.example.invalid
+    description: Replace with the customer Azure Front Door hostname.
+security:
+  - entraOAuth: []
+paths:
+  /controls/operational-readiness:
+    get:
+      operationId: getOperationalReadiness
+      responses:
+        '200': { description: Configuration and evidence status }
+        '401': { description: Authentication required }
+        '403': { description: Role denied }
+  /controls/fraud/assess:
+    post:
+      operationId: assessFraud
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FraudRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/Decision' }
+        '429': { description: Rate limit exceeded }
+  /controls/compliance/assess:
+    post:
+      operationId: assessCompliance
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ComplianceRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/Decision' }
+  /controls/vendors/risk/assess:
+    post:
+      operationId: assessVendorRisk
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/VendorRiskRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/Decision' }
+  /controls/payments/milestones/authorize:
+    post:
+      operationId: authorizeMilestoneWorkflow
+      description: Authorizes workflow progression only; payment_executed is always false.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MilestoneRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/Decision' }
+components:
+  securitySchemes:
+    entraOAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/authorize
+          tokenUrl: https://login.microsoftonline.com/{tenant-id}/oauth2/v2.0/token
+          scopes: {}
+  responses:
+    Decision:
+      description: Explainable decision with tamper-evident audit reference
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Decision' }
+  schemas:
+    Decision:
+      type: object
+      required: [outcome, score, reasons, requires_human_review, audit]
+      properties:
+        outcome: { type: string, enum: [allow, review, block] }
+        score: { type: integer, minimum: 0, maximum: 100 }
+        reasons: { type: array, items: { type: string } }
+        requires_human_review: { type: boolean }
+        payment_executed: { type: boolean }
+        audit:
+          type: object
+          required: [sequence, record_hash]
+          properties:
+            sequence: { type: integer, minimum: 1 }
+            record_hash: { type: string, pattern: '^[a-f0-9]{64}$' }
+    FraudRequest:
+      type: object
+      additionalProperties: false
+      required: [transaction_id, amount]
+      properties:
+        transaction_id: { type: string }
+        amount: { type: number, minimum: 0 }
+        duplicate_invoice: { type: boolean, default: false }
+        bank_account_changed_recently: { type: boolean, default: false }
+        requestor_is_approver: { type: boolean, default: false }
+        supplier_country_risk: { type: string, default: normal }
+    ComplianceRequest:
+      type: object
+      additionalProperties: false
+      required: [supplier_id, kyc, aml, sanctions, tax, beneficial_ownership]
+      properties:
+        supplier_id: { type: string }
+        kyc: { type: string }
+        aml: { type: string }
+        sanctions: { type: string }
+        tax: { type: string }
+        beneficial_ownership: { type: string }
+    VendorRiskRequest:
+      type: object
+      additionalProperties: false
+      required: [supplier_id]
+      properties:
+        supplier_id: { type: string }
+        on_time_delivery_pct: { type: number, minimum: 0, maximum: 100 }
+        credit_score: { type: number, minimum: 0, maximum: 100 }
+        adverse_media: { type: boolean }
+        sanctions_exposure: { type: boolean }
+    MilestoneRequest:
+      type: object
+      additionalProperties: false
+      required: [contract_id, milestone_id, invoice_id, acceptance_evidence_hash, requestor, approver, compliance_status, budget_status]
+      properties:
+        contract_id: { type: string }
+        milestone_id: { type: string }
+        invoice_id: { type: string }
+        acceptance_evidence_hash: { type: string, minLength: 16 }
+        requestor: { type: string }
+        approver: { type: string }
+        compliance_status: { type: string }
+        budget_status: { type: string }
