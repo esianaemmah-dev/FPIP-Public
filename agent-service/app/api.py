@@ -1,4 +1,4 @@
-"""FastAPI service exposing the FPIP LangGraph agent layer.
+﻿"""FastAPI service exposing the FPIP LangGraph agent layer.
 
 Endpoints:
   POST /agents/{agent_id}/invoke          streaming invocation via SSE
@@ -10,16 +10,20 @@ import json
 import logging
 import re
 import uuid
+from time import perf_counter
+from hashlib import sha256
 from typing import Any
 
 from fastapi import Depends, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from langchain_core.messages import AIMessageChunk, HumanMessage
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.agents_config import AGENTS_BY_ID, get_agent_config
 from app.graph import create_agent_graph
+from app.enterprise_api import router as enterprise_router
+from app.enterprise_controls import SlidingWindowRateLimiter
 from app.security import Principal, authorize_agent, internal_thread_id, require_principal
 from app.tools import USER_CONTEXT
 
@@ -27,7 +31,9 @@ logger = logging.getLogger(__name__)
 
 from app.config import Config  # noqa: E402
 
-app = FastAPI(title="FPIP Agent Service", version="2.0.0")
+app = FastAPI(title="FPIP Agent Service", version="2.1.0")
+_RATE_LIMITER = SlidingWindowRateLimiter(Config.RATE_LIMIT_REQUESTS, Config.RATE_LIMIT_WINDOW_SECONDS)
+app.include_router(enterprise_router)
 
 app.add_middleware(
     CORSMiddleware,
@@ -55,9 +61,21 @@ def _serialize_sse(payload: dict[str, Any]) -> str:
 
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
+    started = perf_counter()
     request_id = request.headers.get("X-Request-ID") or str(uuid.uuid4())
-    response = await call_next(request)
+    response = None
+    if request.url.path.startswith(("/agents", "/controls")):
+        credential = request.headers.get("Authorization", "")
+        identity = sha256(credential.encode()).hexdigest() if credential else (request.client.host if request.client else "unknown")
+        allowed, retry_after = _RATE_LIMITER.allow(identity)
+        if not allowed:
+            response = JSONResponse(status_code=429, content={"detail": "Request rate limit exceeded"}, headers={"Retry-After": str(max(1, int(retry_after)))})
+    if response is None:
+        response = await call_next(request)
+    duration_ms = (perf_counter() - started) * 1000
     response.headers["X-Request-ID"] = request_id
+    response.headers["X-FPIP-Region"] = Config.DEPLOYMENT_REGION
+    response.headers["Server-Timing"] = f"app;dur={duration_ms:.2f}"
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "no-referrer"
@@ -79,7 +97,7 @@ _OFFTOPIC_HINTS = re.compile(
 )
 
 _OFFTOPIC_REPLY = (
-    "I'm the FPIP Assistant — I only help with this platform's finance, procurement, "
+    "I'm the FPIP Assistant â€” I only help with this platform's finance, procurement, "
     "contracts, invoices, approvals, budgets, compliance, and supplier records.\n\n"
     "I can't answer general topics (sports, news, trivia, etc.). "
     "Try something like: pending approvals, contracts renewing soon, or spend by category. "
@@ -88,7 +106,7 @@ _OFFTOPIC_REPLY = (
 
 
 def _is_off_topic(message: str) -> bool:
-    """Hard guard before the LLM — refuse clear out-of-scope questions."""
+    """Hard guard before the LLM â€” refuse clear out-of-scope questions."""
     if _FPIP_HINTS.search(message):
         return False
     return bool(_OFFTOPIC_HINTS.search(message))
@@ -243,3 +261,4 @@ def _role_for(message: Any) -> str:
     if hasattr(message, "type"):
         return mapping.get(str(message.type), str(message.type))
     return "unknown"
+
