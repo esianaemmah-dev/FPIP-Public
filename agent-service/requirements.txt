@@ -18,7 +18,7 @@ azure-cosmos>=4.7.0
 
 # Dataverse / Entra ID service-principal auth
 msal>=1.28.0
-requests>=2.32.0
+requests>=2.34.2
 PyJWT[crypto]>=2.8.0
 
 # Test / quality gates
