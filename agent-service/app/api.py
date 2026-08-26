@@ -23,7 +23,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.agents_config import AGENTS_BY_ID, get_agent_config
 from app.graph import create_agent_graph
 from app.enterprise_api import router as enterprise_router
-from app.enterprise_controls import SlidingWindowRateLimiter
+from app.distributed import build_rate_limiter
 from app.security import Principal, authorize_agent, internal_thread_id, require_principal
 from app.tools import USER_CONTEXT
 
@@ -32,7 +32,9 @@ logger = logging.getLogger(__name__)
 from app.config import Config  # noqa: E402
 
 app = FastAPI(title="FPIP Agent Service", version="2.1.0")
-_RATE_LIMITER = SlidingWindowRateLimiter(Config.RATE_LIMIT_REQUESTS, Config.RATE_LIMIT_WINDOW_SECONDS)
+# Redis-backed and fleet-wide when REDIS_URL is configured; otherwise falls
+# back to a per-replica in-process limiter (see app/distributed.py).
+_RATE_LIMITER = build_rate_limiter(Config.RATE_LIMIT_REQUESTS, Config.RATE_LIMIT_WINDOW_SECONDS)
 app.include_router(enterprise_router)
 
 app.add_middleware(

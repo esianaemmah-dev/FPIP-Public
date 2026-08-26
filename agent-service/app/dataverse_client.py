@@ -55,6 +55,28 @@ _AGENT_TABLES: dict[str, set[str]] = {
 _GUID = re.compile(r"^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
 
 
+def _has_balanced_parentheses(expression: str) -> bool:
+    """Reject a filter fragment whose parentheses don't close cleanly.
+
+    Supplier scoping below wraps caller-supplied `filter_expression` as
+    ``(<filter_expression>) and <supplier_filter>``. OData, like SQL, binds
+    `and` tighter than `or`; an expression with an unbalanced closing paren —
+    e.g. ``fpip_status eq 1) or (1 eq 1`` — breaks out of that wrapping group
+    and turns the trailing supplier filter into one branch of an `or`, so it
+    no longer restricts every row. Balanced parentheses guarantee the wrapping
+    group stays intact regardless of the fragment's internal operators.
+    """
+    depth = 0
+    for char in expression:
+        if char == "(":
+            depth += 1
+        elif char == ")":
+            depth -= 1
+            if depth < 0:
+                return False
+    return depth == 0
+
+
 class DataverseClient:
     def __init__(self) -> None:
         self.base_url = Config.DATAVERSE_URL.rstrip("/")
@@ -92,6 +114,9 @@ class DataverseClient:
         agent_id = str(user_context.get("agent_id") or "")
         if table not in _AGENT_TABLES.get(agent_id, set()):
             raise PermissionError(f"Agent '{agent_id}' cannot query table '{table}'")
+
+        if filter_expression and not _has_balanced_parentheses(filter_expression):
+            raise ValueError("filter_expression has unbalanced parentheses")
 
         entity_set = _ENTITY_SETS[table]
         url = f"{self.base_url}/api/data/v9.2/{entity_set}"
