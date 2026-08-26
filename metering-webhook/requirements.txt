@@ -1,4 +1,4 @@
-azure-functions>=1.21.0
+azure-functions>=2.2.0
 azure-identity>=1.16.0
 azure-keyvault-secrets>=4.8.0
 requests>=2.32.0
