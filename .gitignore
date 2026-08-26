@@ -36,3 +36,7 @@ obj/
 opencode.json
 env_details.json
 deployment-state.json
+
+# Stray Azure Static Web Apps / Functions deployment packages
+# (e.g. app/<guid>-app.zip left behind by `swa deploy` or the SWA CLI)
+*.zip

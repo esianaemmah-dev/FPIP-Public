@@ -28,3 +28,6 @@ httpx>=0.27.0
 
 # Microsoft Fabric SQL endpoint
 pyodbc>=5.1.0
+
+# Distributed backing stores for reliability primitives (app/distributed.py)
+redis>=5.0.0

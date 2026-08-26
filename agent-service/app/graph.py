@@ -9,7 +9,7 @@ import logging
 import os
 from typing import Any
 
-from langchain_openai import AzureChatOpenAI
+from langchain_openai import ChatOpenAI
 from langgraph.checkpoint.base import BaseCheckpointSaver
 from langgraph.prebuilt import create_react_agent
 
@@ -63,49 +63,46 @@ def _get_checkpointer() -> BaseCheckpointSaver | None:
 _CHECKPOINTER: BaseCheckpointSaver | None = _get_checkpointer()
 
 
-def _build_llm() -> AzureChatOpenAI:
-    """Build Azure OpenAI client.
-
-    Prefer an API key when present. Otherwise use Managed Identity /
-    DefaultAzureCredential (Cognitive Services OpenAI User on the resource).
-    """
+def _build_llm() -> ChatOpenAI:
+    """Build the Azure OpenAI v1 client for FPIP agents."""
     endpoint = (Config.AZURE_OPENAI_ENDPOINT or "").rstrip("/")
     deployment = Config.AZURE_OPENAI_DEPLOYMENT
+
     if not endpoint or not deployment:
         raise RuntimeError(
             "Azure OpenAI is not configured. Set AZURE_OPENAI_ENDPOINT and "
-            "AZURE_OPENAI_DEPLOYMENT (or Key Vault secrets azure-openai-endpoint / "
-            "azure-openai-deployment-name)."
-        )
-    if "example.openai.azure.com" in endpoint or deployment.lower() in {"dummy", "placeholder"}:
-        raise RuntimeError(
-            "Azure OpenAI still has placeholder settings "
-            f"(endpoint={endpoint!r}, deployment={deployment!r}). "
-            "Create an Azure OpenAI resource, deploy a chat model, then set the "
-            "real endpoint/deployment on the agent Container App (and API key or "
-            "grant the app Managed Identity the Cognitive Services OpenAI User role)."
+            "AZURE_OPENAI_DEPLOYMENT."
         )
 
+    if "example.openai.azure.com" in endpoint or deployment.lower() in {
+        "dummy",
+        "placeholder",
+    }:
+        raise RuntimeError("Azure OpenAI still has placeholder settings.")
+
     kwargs: dict[str, Any] = {
-        "azure_endpoint": endpoint,
-        "azure_deployment": deployment,
-        "api_version": Config.AZURE_OPENAI_API_VERSION,
-        "max_tokens": 2048,
+        "model": deployment,
+        "base_url": f"{endpoint}/openai/v1/",
+        "reasoning_effort": "low",
+        "stream_usage": True,
+        "max_retries": 2,
+        "timeout": 60,
     }
-    # gpt-5* chat models reject custom temperature on some API versions
-    if not deployment.lower().startswith("gpt-5"):
-        kwargs["temperature"] = 0.1
+
     if Config.AZURE_OPENAI_API_KEY:
         kwargs["api_key"] = Config.AZURE_OPENAI_API_KEY
     else:
-        from azure.identity import DefaultAzureCredential, get_bearer_token_provider
+        from azure.identity import (
+            DefaultAzureCredential,
+            get_bearer_token_provider,
+        )
 
-        kwargs["azure_ad_token_provider"] = get_bearer_token_provider(
+        kwargs["api_key"] = get_bearer_token_provider(
             DefaultAzureCredential(),
             "https://cognitiveservices.azure.com/.default",
         )
 
-    return AzureChatOpenAI(**kwargs)
+    return ChatOpenAI(**kwargs)
 
 
 def create_agent_graph(agent_id: str) -> Any:

@@ -75,7 +75,7 @@ defined in [`SECURITY.md`](SECURITY.md) and
 |---|---|
 | Dataverse solution `FPIP_Core` (13 tables, 6 roles incl. agent service) defined | ✅ |
 | Configurable `fpip_approvalpolicy` table for approval thresholds | ✅ |
-| Supplier isolation guarantee | ⚠️ Spec'd — **must be verified with a real test Supplier user** |
+| Supplier isolation guarantee | ✅ Two-supplier cross-tenant isolation proven by automated tests (`agent-service/tests/test_supplier_isolation.py`), including a fixed OData filter-injection bypass — ⚠️ still needs a **real test Supplier user against a live Dataverse tenant** before go-live |
 | React app authenticates via MSAL | ✅ Apps registered; SPA redeployed with Entra + Dataverse env |
 | Five module pages read/write real Dataverse data | ⚠️ Schema live — needs security roles + first login test |
 | Requisition created in UI persists in Dataverse | ⚠️ Ready to verify after roles |

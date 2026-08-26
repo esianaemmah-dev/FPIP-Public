@@ -7,7 +7,7 @@ It must be reviewed before any bank or corporate production deployment.
 |---|---|---|
 | Identity | MSAL SPA; Entra JWT validation on agent API | App registrations, consent and conditional-access evidence |
 | Authorization | UI RBAC; role-to-agent gates; per-agent table allowlists | Dataverse role exports and negative-access tests |
-| Supplier isolation | Required Supplier lookup; query and search self-filters | Two-supplier cross-access penetration test |
+| Supplier isolation | Required Supplier lookup; query and search self-filters; automated two-supplier cross-tenant tests, including a fixed OData filter-injection bypass (`test_supplier_isolation.py`) | Two-supplier cross-access penetration test against a live Dataverse tenant |
 | AI governance | Read-only constitution, scoped tools, user-isolated threads | Model deployment approval and prompt-injection test report |
 | Data | 13-table Dataverse manifest; Fabric-only banking path | Data classification, residency and retention approval |
 | Secrets | Placeholder-only public configuration; Key Vault integration | Key rotation and managed-identity evidence |

@@ -1,4 +1,4 @@
-"""Configuration for the FPIP agent service.
+﻿"""Configuration for the FPIP agent service.
 
 Secrets are loaded from Azure Key Vault via Managed Identity in production.
 For local development, set the same values as environment variables in
@@ -92,6 +92,20 @@ class Config:
     # FastAPI
     APP_ENV: str = os.getenv("APP_ENV", "development").lower()
     PORT: int = int(os.getenv("PORT", "8000"))
+    DEPLOYMENT_REGION: str = os.getenv("DEPLOYMENT_REGION", "local")
+    RATE_LIMIT_REQUESTS: int = int(os.getenv("RATE_LIMIT_REQUESTS", "120"))
+    RATE_LIMIT_WINDOW_SECONDS: float = float(os.getenv("RATE_LIMIT_WINDOW_SECONDS", "60"))
+    AUDIT_SIGNING_KEY: str = _get_optional("audit-signing-key", "AUDIT_SIGNING_KEY") or ""
+    AUDIT_IMMUTABLE_STORAGE_URL: str = os.getenv("AUDIT_IMMUTABLE_STORAGE_URL", "")
+    COMPLIANCE_PROVIDER_URL: str = os.getenv("COMPLIANCE_PROVIDER_URL", "")
+    VENDOR_RISK_PROVIDER_URL: str = os.getenv("VENDOR_RISK_PROVIDER_URL", "")
+
+    # Distributed backing stores for reliability primitives (see app/distributed.py).
+    # Unset in local/single-instance dev -- each falls back to an in-process adapter.
+    REDIS_URL: str | None = _get_optional("redis-url", "REDIS_URL")
+    COSMOS_DB_ENDPOINT: str | None = os.getenv("COSMOS_DB_ENDPOINT") or None
+    COSMOS_IDEMPOTENCY_CONTAINER: str = os.getenv("COSMOS_IDEMPOTENCY_CONTAINER", "idempotency-keys")
+
     CORS_ORIGINS: list[str] = [
         origin.strip()
         for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://localhost:3000").split(",")
@@ -133,3 +147,8 @@ class Config:
                 f"Missing required configuration: {', '.join(missing)}. "
                 "Set AZURE_KEY_VAULT_URL or the corresponding environment variables."
             )
+
+
+
+
+

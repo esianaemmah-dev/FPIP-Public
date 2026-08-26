@@ -76,10 +76,11 @@ def run_fabric_query(query_name: str, params: list[Any] | None = None) -> list[d
     params = params or []
 
     # Extra safety: the allowlist already prevents dynamic SQL; this confirms no
-    # destructive keywords slipped in (defense in depth).
+    # destructive keywords or stacked statements slipped into a template
+    # (defense in depth — see docs/FABRIC_QUERY_ALLOWLIST.md before adding one).
     upper = sql.upper()
     forbidden = ["INSERT ", "UPDATE ", "DELETE ", "DROP ", "ALTER ", "TRUNCATE ", "EXEC(", "EXECUTE("]
-    if any(token in upper for token in forbidden):
+    if any(token in upper for token in forbidden) or ";" in sql or not upper.strip().startswith("SELECT"):
         raise RuntimeError("Refusing to run a non-read-only SQL statement.")
 
     try:

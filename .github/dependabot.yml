@@ -1,0 +1,32 @@
+version: 2
+updates:
+  # React SPA (app/)
+  - package-ecosystem: npm
+    directory: /app
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    groups:
+      dev-dependencies:
+        dependency-type: development
+
+  # LangGraph agent service (agent-service/)
+  - package-ecosystem: pip
+    directory: /agent-service
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+
+  # Marketplace metering webhook (metering-webhook/)
+  - package-ecosystem: pip
+    directory: /metering-webhook
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+
+  # GitHub Actions workflows
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
