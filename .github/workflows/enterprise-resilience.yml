@@ -6,7 +6,11 @@ on:
       - 'infra/enterprise-resilience/**'
       - 'docs/openapi/**'
       - 'scripts/validate-enterprise-artifacts.py'
+      - 'scripts/validate-role-artifacts.py'
       - 'tests/load/**'
+      - 'entra/**'
+      - 'dataverse/**'
+      - 'app/src/lib/entraRoles.ts'
   workflow_dispatch:
 permissions:
   contents: read
@@ -24,5 +28,7 @@ jobs:
         run: python -m pytest
       - name: Validate API and parameters
         run: python scripts/validate-enterprise-artifacts.py
+      - name: Validate role artifacts
+        run: python scripts/validate-role-artifacts.py
       - name: Compile Bicep
         run: az bicep build --file infra/enterprise-resilience/main.bicep

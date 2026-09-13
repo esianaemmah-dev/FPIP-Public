@@ -73,7 +73,7 @@ defined in [`SECURITY.md`](SECURITY.md) and
 
 | Item | Status |
 |---|---|
-| Dataverse solution `FPIP_Core` (13 tables, 6 roles incl. agent service) defined | ✅ |
+| Dataverse solution `FPIP_Core` (13 tables, 9 roles incl. agent service) defined | ✅ Defined in source — ⚠️ still hand-configured per tenant; the provisioning scripts create tables/columns only, never security roles. Platform admin uses the built-in System Administrator role |
 | Configurable `fpip_approvalpolicy` table for approval thresholds | ✅ |
 | Supplier isolation guarantee | ✅ Two-supplier cross-tenant isolation proven by automated tests (`agent-service/tests/test_supplier_isolation.py`), including a fixed OData filter-injection bypass — ⚠️ still needs a **real test Supplier user against a live Dataverse tenant** before go-live |
 | React app authenticates via MSAL | ✅ Apps registered; SPA redeployed with Entra + Dataverse env |
@@ -112,7 +112,8 @@ Deployment-specific IDs and URLs belong in the gitignored `deployment-state.json
 
 **Still manual in Power Platform:**
 
-1. Configure the 6 security roles per `dataverse/FPIP_Core/roles.md`
+1. Configure the 9 security roles per `dataverse/FPIP_Core/roles.md`, and assign
+   the built-in System Administrator role to platform admins
 2. Add a Dataverse **Application User** for your `FPIP-Agent-Service` client ID and assign **FPIP Agent Service**
 3. Sign in to the SPA and create a test requisition
 4. Import Power Automate flows; then Fabric / SharePoint / Purview per `docs/`

@@ -2,7 +2,7 @@
   "solution": {
     "uniqueName": "FPIP_Core",
     "displayName": "FPIP Core",
-    "description": "FPIP (Finance & Procurement Intelligence Platform) core schema — 13 tables, 6 security roles.",
+    "description": "FPIP (Finance & Procurement Intelligence Platform) core schema — 13 tables, 9 security roles (platform admin uses the built-in System Administrator role).",
     "publisher": {
       "uniqueName": "fpip",
       "displayName": "FPIP",
@@ -31,6 +31,9 @@
     { "name": "FPIP Procurement", "permissions": "read/write Requisition, Tender, Bid, PurchaseOrder, RfqSchema, RfqResponse; read Supplier, Contract" },
     { "name": "FPIP Finance", "permissions": "read/write Invoice; read PurchaseOrder, Contract, Supplier" },
     { "name": "FPIP Auditor", "permissions": "read-only on all fpip_* tables, no write" },
+    { "name": "FPIP HOD", "permissions": "create Requisition (User depth); read Requisition (Organization depth, for the budget dashboard); no other tables, no write" },
+    { "name": "FPIP Budget Owner", "permissions": "read-only Requisition, Invoice, PurchaseOrder, Supplier; no create/write/delete anywhere" },
+    { "name": "FPIP Contract Manager", "permissions": "create Tender and PurchaseOrder; write Tender (award); read Contract, Requisition, Tender, Bid, PurchaseOrder, ComplianceDocument, Supplier; no delete. See the segregation-of-duties warning in roles.md" },
     { "name": "FPIP Supplier Portal User", "permissions": "read published RfqSchema; create/read/write only own Bid, Invoice, ComplianceDocument, RfqResponse (referenced Supplier = own); no visibility into other suppliers" },
     { "name": "FPIP Agent Service", "permissions": "read-only on all fpip_* tables; no create/write/delete/assign/share" }
   ]

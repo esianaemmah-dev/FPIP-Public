@@ -34,6 +34,15 @@ def test_agent_access_is_role_gated() -> None:
     assert exc.value.status_code == 403
 
 
+def test_budget_owner_agent_access_stays_within_its_dataverse_role() -> None:
+    """Spend analysis is Budget Owner's job; the finance agent's contract scope is not."""
+    authorize_agent(principal("budget_owner"), "spend")
+    authorize_agent(principal("budget_owner"), "knowledge")
+    with pytest.raises(HTTPException) as exc:
+        authorize_agent(principal("budget_owner"), "finance")
+    assert exc.value.status_code == 403
+
+
 def test_thread_storage_key_is_isolated_per_user() -> None:
     first = internal_thread_id(principal(subject="user-1"), "thread-123")
     second = internal_thread_id(principal(subject="user-2"), "thread-123")

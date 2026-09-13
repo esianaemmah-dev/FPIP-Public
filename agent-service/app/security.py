@@ -29,7 +29,7 @@ _ROLE_NAMES = {
 _AGENT_ROLES: dict[str, set[str]] = {
     "executive": {"admin", "executive", "auditor"},
     "procurement": {"admin", "executive", "procurement", "auditor"},
-    "finance": {"admin", "executive", "finance", "auditor", "budget_owner"},
+    "finance": {"admin", "executive", "finance", "auditor"},
     "spend": {"admin", "executive", "finance", "auditor", "budget_owner"},
     "contract": {"admin", "executive", "procurement", "auditor", "contract_manager"},
     "compliance": {"admin", "procurement", "auditor"},

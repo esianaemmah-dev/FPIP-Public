@@ -57,7 +57,12 @@ function CurrentPage() {
     case '/dashboard':
     case '/':
       if (!can('dashboard')) {
+        // Single-purpose personas land on their own page; check these before the
+        // broader finance/procurement fallbacks, which they also partly match.
         if (can('supplier')) return <Navigate to="/supplier" replace />;
+        if (can('hod_submit')) return <Navigate to="/hod" replace />;
+        if (can('contract_mgr')) return <Navigate to="/contracts-mgr" replace />;
+        if (can('budget_owner_dash')) return <Navigate to="/budget" replace />;
         if (can('finance')) return <Navigate to="/finance" replace />;
         if (can('procurement')) return <Navigate to="/procurement" replace />;
         return <Navigate to="/copilot" replace />;
