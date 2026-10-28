@@ -17,7 +17,7 @@
   },
   "dependencies": {
     "@azure/msal-browser": "^3.14.0",
-    "@azure/msal-react": "^2.1.0",
+    "@azure/msal-react": "^5.7.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^7.18.2"
